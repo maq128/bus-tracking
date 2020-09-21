@@ -4,7 +4,6 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -230,14 +229,14 @@ public class ApiUtil {
 		return sb.toString();
 	}
 
-	public static final void main(String[] paramArrayOfString) {
-		System.out.println(getFullURL("getBuslines"));
-		System.out.println(getFullURL("monitorBus"));
-
-		Map<String, String> paramMap = new HashMap<String, String>();
-		paramMap.put("id", "868120205237610");
-		System.out.println(getFullURL("lineDetail", paramMap));
-	}
+//	public static final void main(String[] paramArrayOfString) {
+//		System.out.println(getFullURL("getBuslines"));
+//		System.out.println(getFullURL("monitorBus"));
+//
+//		Map<String, String> paramMap = new HashMap<String, String>();
+//		paramMap.put("id", "868120205237610");
+//		System.out.println(getFullURL("lineDetail", paramMap));
+//	}
 
 //	public static final void setSessionCookie(Map<String, String> paramMap, String paramString) {
 //		if (!TextUtils.isEmpty(paramString)) {

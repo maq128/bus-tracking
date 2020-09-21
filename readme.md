@@ -6,6 +6,12 @@
 
 本项目基于对这个 app 的逆向工程，实现了简易的班车位置查询功能。
 
+# 百度地图接口
+
+[百度地图生成器](http://api.map.baidu.com/lbsapi/creatmap/)
+
+[百度地图API](http://lbsyun.baidu.com/jsdemo.htm)
+
 # docker 打包运行
 
 ```sh
