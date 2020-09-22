@@ -82,9 +82,9 @@ function addMarker(lon, lat){
 $(function() {
 	var did = /*[[${did}]]*/ null;
 
-	var buses = JSON.parse(/*[[${buses}]]*/ '');
 	var list = $('#list').empty();
-	buses.data.forEach(function(bus) {
+	var buses = /*[[${buses}]]*/ [];
+	buses.forEach(function(bus) {
 		if (bus.id > 0) {
 			$('<a></a>')
 				.attr('href', '?did=' + bus.gps_device_id)
@@ -96,8 +96,8 @@ $(function() {
 
 	initMap();//创建和初始化地图
 
-	var locations = JSON.parse(/*[[${locations}]]*/ '');
-	locations.data.forEach(function(bus) {
+	var locations = /*[[${locations}]]*/ [];
+	locations.forEach(function(bus) {
 		if (bus.gps_device_id == /*[[${did}]]*/ 868120205237610) {
 			addMarker(bus.lon, bus.lat);//向地图中添加marker
 		}

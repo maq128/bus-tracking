@@ -7,6 +7,8 @@ import java.security.NoSuchAlgorithmException;
 import java.util.Iterator;
 import java.util.Map;
 
+import org.apache.http.util.TextUtils;
+
 public class ApiUtil {
 	public static final String API_COMPLAINT_DETAIL = "getComplaintDetail";
 	public static final String API_METHOD_ARTICLECATES = "articleCates";
@@ -238,19 +240,19 @@ public class ApiUtil {
 //		System.out.println(getFullURL("lineDetail", paramMap));
 //	}
 
-//	public static final void setSessionCookie(Map<String, String> paramMap, String paramString) {
-//		if (!TextUtils.isEmpty(paramString)) {
-//			StringBuilder localStringBuilder = new StringBuilder();
-//			localStringBuilder.append("PHPSESSID");
-//			localStringBuilder.append("=");
-//			localStringBuilder.append(paramString);
-//			if (paramMap.containsKey("Cookie")) {
-//				localStringBuilder.append("; ");
-//				localStringBuilder.append((String) paramMap.get("Cookie"));
-//			}
-//			paramMap.put("Cookie", localStringBuilder.toString());
-//		}
-//	}
+	public static final void setSessionCookie(Map<String, String> paramMap, String paramString) {
+		if (!TextUtils.isEmpty(paramString)) {
+			StringBuilder localStringBuilder = new StringBuilder();
+			localStringBuilder.append("PHPSESSID");
+			localStringBuilder.append("=");
+			localStringBuilder.append(paramString);
+			if (paramMap.containsKey("Cookie")) {
+				localStringBuilder.append("; ");
+				localStringBuilder.append((String) paramMap.get("Cookie"));
+			}
+			paramMap.put("Cookie", localStringBuilder.toString());
+		}
+	}
 }
 
 class MD5 {
