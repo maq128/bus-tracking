@@ -58,11 +58,17 @@ function openWebSocket() {
 	websocket.onclose = function () {
 		//关闭连接
 		console.log("onclose");
+		websocket = null;
+	}
+
+	websocket.onerror = function () {
+		console.log("onerror");
+		websocket = null;
 	}
 
 	// 接收信息
-	websocket.onmessage = function (msg) {
-		console.log(msg.data);
+	websocket.onmessage = function (evt) {
+		console.log('message:', JSON.parse(evt.data));
 	}
 }
 

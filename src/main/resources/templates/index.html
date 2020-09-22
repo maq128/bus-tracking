@@ -10,12 +10,12 @@
 	font-size:11pt;
 }
 
-a.bus {
+a.line {
 	display:inline-block;
 	padding:0.5em 1em;
 }
 
-a.bus.cur {
+a.line.cur {
 	background-color:#eee;
 }
 
@@ -83,13 +83,13 @@ $(function() {
 	var did = /*[[${did}]]*/ null;
 
 	var list = $('#list').empty();
-	var buses = /*[[${buses}]]*/ [];
-	buses.forEach(function(bus) {
-		if (bus.id > 0) {
+	var lines = /*[[${lines}]]*/ [];
+	lines.forEach(function(line) {
+		if (line.id > 0) {
 			$('<a></a>')
-				.attr('href', '?did=' + bus.gps_device_id)
-				.addClass(bus.gps_device_id == did ? 'bus cur' : 'bus')
-				.text(bus.name)
+				.attr('href', '?did=' + line.gps_device_id)
+				.addClass(line.gps_device_id == did ? 'line cur' : 'line')
+				.text(line.name)
 				.appendTo(list);
 		}
 	});
@@ -97,16 +97,16 @@ $(function() {
 	initMap();//创建和初始化地图
 
 	var locations = /*[[${locations}]]*/ [];
-	locations.forEach(function(bus) {
-		if (bus.gps_device_id == /*[[${did}]]*/ 868120205237610) {
-			addMarker(bus.lon, bus.lat);//向地图中添加marker
+	locations.forEach(function(loc) {
+		if (loc.gps_device_id == /*[[${did}]]*/ 868120205237610) {
+			addMarker(loc.lon, loc.lat);//向地图中添加marker
 		}
 	});
 
 //	var map = $('#map').empty();
-//	locations.data.forEach(function(bus) {
-//		if (bus.gps_device_id == /*[[${did}]]*/ 868120205237610) {
-//			var pos = bus.lon + ',' + bus.lat;
+//	locations.data.forEach(function(loc) {
+//		if (loc.gps_device_id == /*[[${did}]]*/ 868120205237610) {
+//			var pos = loc.lon + ',' + loc.lat;
 //			var url = 'http://api.map.baidu.com/staticimage?center=' + pos + '&zoom=15&width=600&height=450&markers=' + pos;
 //			$('<img>')
 //				.attr('width', '100%')

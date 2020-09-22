@@ -1,5 +1,8 @@
 package bus;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -7,16 +10,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.ModelAndView;
 
-import lombok.extern.slf4j.Slf4j;
+import com.google.gson.Gson;
 
 @RestController
-@Slf4j
 public class BusController {
 	@Autowired
 	ApiService apiService;
-
-	@Autowired
-	WsServerEndpoint wsServerEndpoint;
 
 	@GetMapping("/")
 	public ModelAndView index(@Nullable @RequestParam Long did) {
@@ -27,7 +26,7 @@ public class BusController {
 				mv.addObject("did", did.longValue());
 			}
 
-			mv.addObject("buses", apiService.getBuslines());
+			mv.addObject("lines", apiService.getBuslines());
 			mv.addObject("locations", apiService.monitorBus());
 		} catch (Exception e) {
 			mv.addObject("errorMsg", e.getMessage());
@@ -44,8 +43,12 @@ public class BusController {
 
 	@GetMapping("/broadcast")
 	public String broadcast() {
-		log.trace("BusController.broadcast:{} / wsServerEndpoint:{}", this.hashCode(), wsServerEndpoint.hashCode());
-		wsServerEndpoint.broadcast("HI");
+		Map<String, Object>[] locations = apiService.monitorBus();
+		Map<String, Object> data = new HashMap<String, Object>();
+		data.put("locations", locations);
+		Gson g = new Gson();
+		String json = g.toJson(data);
+		WsSessionManager.broadcast(json);
 		return "OK";
 	}
 }

@@ -22,13 +22,13 @@ public class ApiService {
 	CacheService cacheService;
 
 	public Map<String, Object>[] getBuslines() {
-		Map<String, Object>[] buses = (Map<String, Object>[])cacheService.get("buses");
-		if (buses != null) return buses;
+		Map<String, Object>[] lines = (Map<String, Object>[])cacheService.get("lines");
+		if (lines != null) return lines;
 
-		buses = request("getBuslines");
+		lines = request("getBuslines");
 
-		cacheService.put("buses", buses, 3600);
-		return buses;
+		cacheService.put("lines", lines, 3600);
+		return lines;
 	}
 
 	public Map<String, Object>[] monitorBus() {
