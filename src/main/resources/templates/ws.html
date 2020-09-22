@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no">
+<title>ws</title>
+<link rel="icon" href="favicon.ico">
+<style>
+* {
+	font-size:11pt;
+}
+
+a.bus {
+	display:inline-block;
+	padding:0.5em 1em;
+}
+
+a.bus.cur {
+	background-color:#eee;
+}
+
+#map {
+	width:100%;
+	height:550px;
+	border:#ccc solid 1px;
+}
+</style>
+</head>
+<body>
+
+<button onclick="openWebSocket()">openWebSocket</button>
+<button onclick="closeWebSocket()">closeWebSocket</button>
+
+<script src="cash.min.js"></script>
+<script th:inline="javascript">
+var websocket;
+
+$(function() {
+	openWebSocket();
+})
+
+function openWebSocket() {
+	console.log("openWebSocket");
+	if (websocket != null) {
+		return;
+	}
+
+	console.log('ws://' + window.location.host + '/ws');
+	// 建立webSocket连接
+	websocket = new WebSocket('ws://' + window.location.host + '/ws');
+
+	// 打开webSokcet连接时，回调该函数
+	websocket.onopen = function () {
+		console.log("onpen");
+	}
+
+	// 关闭webSocket连接时，回调该函数
+	websocket.onclose = function () {
+		//关闭连接
+		console.log("onclose");
+	}
+
+	// 接收信息
+	websocket.onmessage = function (msg) {
+		console.log(msg.data);
+	}
+}
+
+function closeWebSocket() {
+	console.log("closeWebSocket");
+	if (websocket != null) {
+		websocket.close();
+		websocket = null;
+	}
+}
+</script>
+</body>
+</html>
