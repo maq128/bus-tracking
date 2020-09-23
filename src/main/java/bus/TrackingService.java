@@ -18,8 +18,6 @@ public class TrackingService {
 	@Bean
 	public TaskScheduler taskScheduler(){
 		ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
-		scheduler.setPoolSize(2);
-		scheduler.setThreadNamePrefix("tracking-service-");
 		return scheduler;
 	}
 
