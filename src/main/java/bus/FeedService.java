@@ -14,7 +14,7 @@ import com.google.gson.Gson;
 
 @Service
 @EnableScheduling
-public class TrackingService {
+public class FeedService {
 	@Bean
 	public TaskScheduler taskScheduler(){
 		ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
