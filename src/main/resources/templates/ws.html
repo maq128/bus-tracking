@@ -32,49 +32,85 @@ a.line.cur {
 
 <div id="lines"></div>
 
-<div id="locations"></div>
-
 <div id="map"></div>
 
 <script src="cash.min.js"></script>
+<script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=lv1upIfGGA9Bj69kIcOBU1b86hPxbVpp"></script>
 <script th:inline="javascript">
+var map;
+var buttons = {};
+var markers = {};
+var cur_did = null;
 var websocket;
-var lines = /*[[${lines}]]*/ [];
-var locations = /*[[${locations}]]*/ [];
-var cur_id = null;
 
 $(function() {
+	var lines = /*[[${lines}]]*/ [];
 	lines.forEach(function(line) {
 		if (line.id < 0) return;
-		$('<a></a>')
+		var button = $('<a></a>')
 			.addClass('line')
 			.text(line.name)
-			.attr('data-id', line.gps_device_id)
 			.on('click', function() {
 				locateTo(line.gps_device_id);
 			})
 			.appendTo($('#lines'));
+		buttons[line.gps_device_id] = button;
+	});
+
+	// 创建地图
+	map = new BMap.Map('map'); 
+	map.centerAndZoom(new BMap.Point(116.403874,39.914889), 11);
+
+	map.enableScrollWheelZoom();
+	map.enableKeyboard();
+	map.enableDragging();
+	map.enablePinchToZoom();
+
+	// 比例尺
+	var scaleControl = new BMap.ScaleControl({anchor:BMAP_ANCHOR_BOTTOM_LEFT});
+	scaleControl.setUnit(BMAP_UNIT_METRIC);
+	map.addControl(scaleControl);
+	// 缩放控制
+	var navControl = new BMap.NavigationControl({anchor:BMAP_ANCHOR_TOP_LEFT, type:3});
+	map.addControl(navControl);
+
+	// 为每车创建一个标记
+	var locations = /*[[${locations}]]*/ [];
+	locations.forEach(function(loc) {
+		var point = new BMap.Point(loc.lon, loc.lat);
+		var myIcon = new BMap.Icon('bus.gif', new BMap.Size(19, 25), {anchor:new BMap.Size(-10, -25)});
+		var marker = new BMap.Marker(point, {icon:myIcon});
+		map.addOverlay(marker);
+		markers[loc.gps_device_id] = marker;
 	});
 
 	openWebSocket();
 })
 
 function locateTo(gps_device_id) {
-	$('#lines a').each(function(idx, btn) {
-		if ($(btn).attr('data-id') == gps_device_id) {
-			$(btn).addClass('cur');
+	if (!cur_did) map.setZoom(14);
+	cur_did = gps_device_id;
+
+	// 更新按钮的状态
+	for (var did in buttons) {
+		var button = buttons[did];
+		if (did == cur_did) {
+			button.addClass('cur');
 		} else {
-			$(btn).removeClass('cur');
+			button.removeClass('cur');
 		}
-	});
+	}
 
-	locations.forEach(function(loc) {
-		if (loc.gps_device_id == gps_device_id) {
-			$('#map').text(gps_device_id + ': ' + loc.lon + ', ' + loc.lat);
+	// 显示到指定的标记
+	for (var did in markers) {
+		var marker = markers[did];
+		if (did == cur_did) {
+			marker.setTop(true);
+			map.panTo(marker.getPosition());
+		} else {
+			marker.setTop(false);
 		}
-	})
-
-	cur_id = gps_device_id;
+	}
 }
 
 function openWebSocket() {
@@ -109,9 +145,12 @@ function openWebSocket() {
 	// 接收信息
 	websocket.onmessage = function (evt) {
 		var json = evt.data;
-		$('#locations').text(json);
-		locations = JSON.parse(json);
-		locateTo(cur_id);
+		var locations = JSON.parse(json);
+		// 更新所有标记的坐标位置
+		locations.forEach(function(loc) {
+			var marker = markers[loc.gps_device_id];
+			marker.setPosition(new BMap.Point(loc.lon, loc.lat));
+		});
 	}
 }
 </script>
