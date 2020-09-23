@@ -1,6 +1,5 @@
 package bus;
 
-import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +26,7 @@ public class BusController {
 			}
 
 			mv.addObject("lines", apiService.getBuslines());
-			mv.addObject("locations", apiService.monitorBus());
+			mv.addObject("locations", apiService.monitorBus(false));
 		} catch (Exception e) {
 			mv.addObject("errorMsg", e.getMessage());
 		}
@@ -38,17 +37,23 @@ public class BusController {
 	@GetMapping("/ws")
 	public ModelAndView ws() {
 		ModelAndView mv = new ModelAndView("ws");
+
+		try {
+			mv.addObject("lines", apiService.getBuslines());
+			mv.addObject("locations", apiService.monitorBus(false));
+		} catch (Exception e) {
+			mv.addObject("errorMsg", e.getMessage());
+		}
+
 		return mv;
 	}
 
 	@GetMapping("/broadcast")
 	public String broadcast() {
-		Map<String, Object>[] locations = apiService.monitorBus();
-		Map<String, Object> data = new HashMap<String, Object>();
-		data.put("locations", locations);
+		Map<String, Object>[] locations = apiService.monitorBus(true);
 		Gson g = new Gson();
-		String json = g.toJson(data);
-		WsSessionManager.broadcast(json);
+		String json = g.toJson(locations);
+		WsServerEndpoint.broadcast(json);
 		return "OK";
 	}
 }

@@ -1,5 +1,6 @@
 package bus;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -31,8 +32,16 @@ public class ApiService {
 		return lines;
 	}
 
-	public Map<String, Object>[] monitorBus() {
-		return request("monitorBus");
+	public Map<String, Object>[] monitorBus(boolean force) {
+		if (!force) {
+			Map<String, Object>[] locations = (Map<String, Object>[])cacheService.get("locations");
+			if (locations != null) return locations;
+		}
+
+		Map<String, Object>[] locations = request("monitorBus");
+
+		cacheService.put("locations", locations, 30);
+		return locations;
 	}
 
 	private Map<String, Object>[] request(String name) {
@@ -51,10 +60,10 @@ public class ApiService {
 				return resp.data;
 			}
 
-			return null;
+			return new HashMap[0];
 		} catch (Exception e) {
 			log.error(e.getMessage());
-			return null;
+			return new HashMap[0];
 		}
 	}
 }

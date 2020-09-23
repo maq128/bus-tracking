@@ -10,12 +10,12 @@
 	font-size:11pt;
 }
 
-a.bus {
+a.line {
 	display:inline-block;
 	padding:0.5em 1em;
 }
 
-a.bus.cur {
+a.line.cur {
 	background-color:#eee;
 }
 
@@ -24,59 +24,93 @@ a.bus.cur {
 	height:550px;
 	border:#ccc solid 1px;
 }
+#map.disconnected {
+	border:red solid 1px;
+}
 </style>
 </head>
 <body>
 
-<button onclick="openWebSocket()">openWebSocket</button>
-<button onclick="closeWebSocket()">closeWebSocket</button>
+<div id="lines"></div>
+
+<div id="locations"></div>
+
+<div id="map"></div>
 
 <script src="cash.min.js"></script>
 <script th:inline="javascript">
 var websocket;
+var lines = /*[[${lines}]]*/ [];
+var locations = /*[[${locations}]]*/ [];
 
 $(function() {
+	lines.forEach(function(line) {
+		if (line.id > 0) {
+			$('<a></a>')
+				.addClass('line')
+				.text(line.name)
+				.attr('data-id', line.gps_device_id)
+				.on('click', function() {
+					locateTo(line.gps_device_id);
+				})
+				.appendTo($('#lines'));
+		}
+	});
+
 	openWebSocket();
 })
 
+function locateTo(gps_device_id) {
+	$('#lines a').each(function(idx, btn) {
+		if ($(btn).attr('data-id') == gps_device_id) {
+			$(btn).addClass('cur');
+		} else {
+			$(btn).removeClass('cur');
+		}
+	});
+
+	locations.forEach(function(loc) {
+		if (loc.gps_device_id == gps_device_id) {
+			$('#map').text(gps_device_id + ': ' + loc.lon + ', ' + loc.lat);
+		}
+	})
+}
+
 function openWebSocket() {
-	console.log("openWebSocket");
 	if (websocket != null) {
 		return;
 	}
 
-	console.log('ws://' + window.location.host + '/ws');
 	// 建立webSocket连接
+	var wsUrl = 'ws://' + window.location.host + '/ws';
 	websocket = new WebSocket('ws://' + window.location.host + '/ws');
 
 	// 打开webSokcet连接时，回调该函数
 	websocket.onopen = function () {
-		console.log("onpen");
+		$('#map').removeClass('disconnected');
 	}
 
 	// 关闭webSocket连接时，回调该函数
 	websocket.onclose = function () {
 		//关闭连接
-		console.log("onclose");
 		websocket = null;
+		$('#map').addClass('disconnected');
+
+		// 延迟 2 秒后重新建立连接
+		setTimeout(openWebSocket, 2000);
 	}
 
 	websocket.onerror = function () {
-		console.log("onerror");
 		websocket = null;
+		$('#map').addClass('disconnected');
 	}
 
 	// 接收信息
 	websocket.onmessage = function (evt) {
 		console.log('message:', JSON.parse(evt.data));
-	}
-}
-
-function closeWebSocket() {
-	console.log("closeWebSocket");
-	if (websocket != null) {
-		websocket.close();
-		websocket = null;
+		var json = evt.data;
+		$('#locations').text(json);
+		locations = JSON.parse(json);
 	}
 }
 </script>
