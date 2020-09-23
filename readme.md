@@ -78,7 +78,7 @@ public class WsServerEndpoint {
 但是在跟 websockets 一起使用时会出现冲突，解决的办法是自己创建一个 `TaskScheduler` 实例：
 ```java
 	@Bean
-	public TaskScheduler taskScheduler(){
+	public TaskScheduler taskScheduler() {
 		ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
 		return scheduler;
 	}
