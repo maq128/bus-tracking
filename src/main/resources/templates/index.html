@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no">
-<title>班车位置</title>
+<title>世纪互联班车位置</title>
 <link rel="icon" href="favicon.ico">
 <style>
 * {
@@ -14,7 +14,6 @@ a.line {
 	display:inline-block;
 	padding:0.5em 1em;
 }
-
 a.line.cur {
 	background-color:#eee;
 }
@@ -24,97 +23,178 @@ a.line.cur {
 	height:550px;
 	border:#ccc solid 1px;
 }
+#map.disconnected {
+	border:red solid 1px;
+}
 </style>
 </head>
 <body>
 
-<div th:if="${errorMsg}" th:text="${errorMsg}">...</div>
-
-<div id="list"></div>
+<div id="lines"></div>
 
 <div id="map"></div>
 
 <script src="cash.min.js"></script>
-<script type="text/javascript" src="http://api.map.baidu.com/api?key=&v=1.1&services=true"></script>
+<script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=lv1upIfGGA9Bj69kIcOBU1b86hPxbVpp"></script>
 <script th:inline="javascript">
-//创建和初始化地图函数：
-function initMap(){
-	createMap();//创建地图
-	setMapEvent();//设置地图事件
-	addMapControl();//向地图添加控件
-}
-
-//创建地图函数：
-function createMap(){
-	var map = new BMap.Map("map");//在百度地图容器中创建一个地图
-	var point = new BMap.Point(116.395645, 39.929986);//定义一个中心点坐标
-	map.centerAndZoom(point, 12);//设定地图的中心点和坐标并将地图显示在地图容器中
-	window.map = map;//将map变量存储在全局
-}
-
-//地图事件设置函数：
-function setMapEvent(){
-	map.enableDragging();//启用地图拖拽事件，默认启用(可不写)
-	map.enableScrollWheelZoom();//启用地图滚轮放大缩小
-	map.enableDoubleClickZoom();//启用鼠标双击放大，默认启用(可不写)
-	map.enableKeyboard();//启用键盘上下左右键移动地图
-}
-
-//地图控件添加函数：
-function addMapControl(){
-	//向地图中添加比例尺控件
-	var ctrl_sca = new BMap.ScaleControl({anchor:BMAP_ANCHOR_BOTTOM_LEFT});
-	map.addControl(ctrl_sca);
-	//向地图中添加缩放控件
-	var ctrl_nav = new BMap.NavigationControl({anchor:BMAP_ANCHOR_BOTTOM_LEFT,type:BMAP_NAVIGATION_CONTROL_ZOOM});
-	map.addControl(ctrl_nav);
-}
-
-//创建marker
-function addMarker(lon, lat){
-	var point = new BMap.Point(lon, lat);
-	var myIcon = new BMap.Icon("bus.gif", new BMap.Size(19, 25), {offset:new BMap.Size(10,25)});
-	var marker = new BMap.Marker(point, {icon:myIcon});
-	map.addOverlay(marker);
-	map.centerAndZoom(point, 14);
-}
+var map;
+var buttons = {};
+var markers = {};
+var cur_did = null;
+var websocket;
 
 $(function() {
-	var did = /*[[${did}]]*/ null;
-
-	var list = $('#list').empty();
 	var lines = /*[[${lines}]]*/ [];
+	var specs = {};
 	lines.forEach(function(line) {
-		if (line.id > 0) {
-			$('<a></a>')
-				.attr('href', '?did=' + line.gps_device_id)
-				.addClass(line.gps_device_id == did ? 'line cur' : 'line')
-				.text(line.name)
-				.appendTo(list);
-		}
+		if (line.id < 0) return;
+		var spec = IconBuilder.nextSpec();
+		specs[line.gps_device_id] = spec;
+		var button = $('<a></a>')
+			.addClass('line')
+			.on('click', function() {
+				locateTo(line.gps_device_id);
+			})
+			.append(IconBuilder.buildIcon(spec))
+			.append($('<span></span>').text(line.name))
+			.appendTo($('#lines'));
+		buttons[line.gps_device_id] = button;
 	});
 
-	initMap();//创建和初始化地图
+	// 创建地图
+	map = new BMap.Map('map'); 
+	map.centerAndZoom(new BMap.Point(116.403874,39.914889), 11);
 
+	map.enableScrollWheelZoom();
+	map.enableKeyboard();
+	map.enableDragging();
+	map.enablePinchToZoom();
+
+	// 比例尺
+	var scaleControl = new BMap.ScaleControl({anchor:BMAP_ANCHOR_BOTTOM_LEFT});
+	scaleControl.setUnit(BMAP_UNIT_METRIC);
+	map.addControl(scaleControl);
+	// 缩放控制
+	var navControl = new BMap.NavigationControl({anchor:BMAP_ANCHOR_TOP_LEFT, type:3});
+	map.addControl(navControl);
+
+	// 为每车创建一个标记
 	var locations = /*[[${locations}]]*/ [];
 	locations.forEach(function(loc) {
-		if (loc.gps_device_id == /*[[${did}]]*/ 868120205237610) {
-			addMarker(loc.lon, loc.lat);//向地图中添加marker
-		}
+		var point = new BMap.Point(loc.lon, loc.lat);
+		var spec = specs[loc.gps_device_id];
+		var marker = new BMap.Marker(point, {icon:IconBuilder.buildMapIcon(spec)});
+		map.addOverlay(marker);
+		markers[loc.gps_device_id] = marker;
 	});
 
-//	var map = $('#map').empty();
-//	locations.data.forEach(function(loc) {
-//		if (loc.gps_device_id == /*[[${did}]]*/ 868120205237610) {
-//			var pos = loc.lon + ',' + loc.lat;
-//			var url = 'http://api.map.baidu.com/staticimage?center=' + pos + '&zoom=15&width=600&height=450&markers=' + pos;
-//			$('<img>')
-//				.attr('width', '100%')
-//				.attr('src', url)
-//				.appendTo(map);
-//		}
-//	});
+	openWebSocket();
 })
+
+var IconBuilder = {
+	x_offsets: [23, 46, 69, 92, 115, 0],
+	nextSpec: function() {
+		var x_offset = this.x_offsets.shift();
+		this.x_offsets.push(x_offset);
+		return {
+			img: 'markers.gif',
+			x: x_offset,
+			y: 0,
+			w: 19,
+			h: 25,
+			dx: 10,
+			dy: 25
+		};
+	},
+	buildIcon: function(spec) {
+		return $('<span></span>')
+			.width(spec.w)
+			.height(spec.h)
+			.css({
+				'background-image': 'url("' + spec.img + '")',
+				'background-position-x': '-' + spec.x + 'px',
+				'background-position-y': '-' + spec.y + 'px',
+				'display': 'inline-block'
+			});
+	},
+	buildMapIcon: function(spec) {
+		return new BMap.Icon(
+			spec.img,
+			new BMap.Size(spec.w, spec.h),
+			{
+				imageOffset: new BMap.Size(-spec.x, -spec.y),
+				anchor: new BMap.Size(-spec.dx, -spec.dy)
+			}
+		);
+	}
+};
+
+function locateTo(gps_device_id) {
+	if (!cur_did) map.setZoom(14);
+	cur_did = gps_device_id;
+
+	// 更新按钮的状态
+	for (var did in buttons) {
+		var button = buttons[did];
+		if (did == cur_did) {
+			button.addClass('cur');
+		} else {
+			button.removeClass('cur');
+		}
+	}
+
+	// 显示到指定的标记
+	for (var did in markers) {
+		var marker = markers[did];
+		if (did == cur_did) {
+			marker.setTop(true);
+			map.panTo(marker.getPosition());
+		} else {
+			marker.setTop(false);
+		}
+	}
+}
+
+function openWebSocket() {
+	if (websocket != null) {
+		return;
+	}
+
+	// 建立webSocket连接
+	var wsUrl = 'ws://' + window.location.host + '/ws';
+	websocket = new WebSocket('ws://' + window.location.host + '/ws');
+
+	// 打开webSokcet连接时，回调该函数
+	websocket.onopen = function () {
+		$('#map').removeClass('disconnected');
+	}
+
+	// 关闭webSocket连接时，回调该函数
+	websocket.onclose = function () {
+		//关闭连接
+		websocket = null;
+		$('#map').addClass('disconnected');
+
+		// 延迟 2 秒后重新建立连接
+		setTimeout(openWebSocket, 2000);
+	}
+
+	websocket.onerror = function () {
+		websocket = null;
+		$('#map').addClass('disconnected');
+	}
+
+	// 接收信息
+	websocket.onmessage = function (evt) {
+		var json = evt.data;
+		var locations = JSON.parse(json);
+		// 更新所有标记的坐标位置
+		locations.forEach(function(loc) {
+			var marker = markers[loc.gps_device_id];
+			marker.setPosition(new BMap.Point(loc.lon, loc.lat));
+		});
+	}
+}
 </script>
 </body>
 </html>
