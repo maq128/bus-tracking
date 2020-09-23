@@ -10,9 +10,6 @@ import javax.websocket.server.ServerEndpoint;
 
 import lombok.extern.slf4j.Slf4j;
 
-// @ServerEndpoint and @Autowired
-// https://stackoverflow.com/questions/29306854/serverendpoint-and-autowired
-
 @ServerEndpoint("/ws")
 @Slf4j
 public class WsServerEndpoint {
@@ -30,7 +27,12 @@ public class WsServerEndpoint {
 		sessions.remove(session.getId());
 	}
 
+	public static long getSessionsNum() {
+		return sessions.size();
+	}
+
 	public static void broadcast(String text) {
+		log.trace("WsServerEndpoint.broadcast: {}", sessions.size());
 		for (String id : sessions.keySet()) {
 			Session session = sessions.get(id);
 			try {

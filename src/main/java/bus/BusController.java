@@ -38,12 +38,8 @@ public class BusController {
 	public ModelAndView ws() {
 		ModelAndView mv = new ModelAndView("ws");
 
-		try {
-			mv.addObject("lines", apiService.getBuslines());
-			mv.addObject("locations", apiService.monitorBus(false));
-		} catch (Exception e) {
-			mv.addObject("errorMsg", e.getMessage());
-		}
+		mv.addObject("lines", apiService.getBuslines());
+		mv.addObject("locations", apiService.monitorBus(false));
 
 		return mv;
 	}

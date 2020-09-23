@@ -21,3 +21,11 @@ docker build -t bus-tracking .
 
 docker run -d --name=bus-tracking --network=main_network bus-tracking
 ```
+
+# `@ServerEndpoint` 跟 `@Autowired` 不能同时用的问题
+
+[@ServerEndpoint and @Autowired](https://stackoverflow.com/questions/29306854/serverendpoint-and-autowired)
+
+# 定时任务问题
+
+[Scheduled task not working with websockets](https://stackoverflow.com/questions/56169448/scheduled-task-not-working-with-websockets)

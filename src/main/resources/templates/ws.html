@@ -14,7 +14,6 @@ a.line {
 	display:inline-block;
 	padding:0.5em 1em;
 }
-
 a.line.cur {
 	background-color:#eee;
 }
@@ -42,19 +41,19 @@ a.line.cur {
 var websocket;
 var lines = /*[[${lines}]]*/ [];
 var locations = /*[[${locations}]]*/ [];
+var cur_id = null;
 
 $(function() {
 	lines.forEach(function(line) {
-		if (line.id > 0) {
-			$('<a></a>')
-				.addClass('line')
-				.text(line.name)
-				.attr('data-id', line.gps_device_id)
-				.on('click', function() {
-					locateTo(line.gps_device_id);
-				})
-				.appendTo($('#lines'));
-		}
+		if (line.id < 0) return;
+		$('<a></a>')
+			.addClass('line')
+			.text(line.name)
+			.attr('data-id', line.gps_device_id)
+			.on('click', function() {
+				locateTo(line.gps_device_id);
+			})
+			.appendTo($('#lines'));
 	});
 
 	openWebSocket();
@@ -74,6 +73,8 @@ function locateTo(gps_device_id) {
 			$('#map').text(gps_device_id + ': ' + loc.lon + ', ' + loc.lat);
 		}
 	})
+
+	cur_id = gps_device_id;
 }
 
 function openWebSocket() {
@@ -107,10 +108,10 @@ function openWebSocket() {
 
 	// 接收信息
 	websocket.onmessage = function (evt) {
-		console.log('message:', JSON.parse(evt.data));
 		var json = evt.data;
 		$('#locations').text(json);
 		locations = JSON.parse(json);
+		locateTo(cur_id);
 	}
 }
 </script>
