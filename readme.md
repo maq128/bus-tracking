@@ -20,12 +20,14 @@ docker run -d --name=bus-tracking --network=main_network bus-tracking
 
 # 百度地图接口
 
-[百度地图生成器](http://api.map.baidu.com/lbsapi/creatmap/)
-
-[百度地图API](http://lbsyun.baidu.com/jsdemo.htm)
+[百度地图开放平台](http://lbsyun.baidu.com/)
+| [JS API 2.0](http://lbsyun.baidu.com/index.php?title=jspopular)
+| [类参考](https://lbsyun.baidu.com/cms/jsapi/reference/jsapi_reference.html)
+| [示例DEMO](http://lbsyun.baidu.com/jsdemo.htm)
+| [地图生成器](http://api.map.baidu.com/lbsapi/createmap/index.html)
 
 [一条指令即可在网页中嵌入百度地图](https://my.oschina.net/ZhenyuanLiu/blog/1791570)
-
+| [静态图 API V2.0](https://lbsyun.baidu.com/index.php?title=static)
 
 # `@ServerEndpoint` 的自动发现
 
