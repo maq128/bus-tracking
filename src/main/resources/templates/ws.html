@@ -45,14 +45,18 @@ var websocket;
 
 $(function() {
 	var lines = /*[[${lines}]]*/ [];
+	var specs = {};
 	lines.forEach(function(line) {
 		if (line.id < 0) return;
+		var spec = IconBuilder.nextSpec();
+		specs[line.gps_device_id] = spec;
 		var button = $('<a></a>')
 			.addClass('line')
-			.text(line.name)
 			.on('click', function() {
 				locateTo(line.gps_device_id);
 			})
+			.append(IconBuilder.buildIcon(spec))
+			.append($('<span></span>').text(line.name))
 			.appendTo($('#lines'));
 		buttons[line.gps_device_id] = button;
 	});
@@ -78,14 +82,52 @@ $(function() {
 	var locations = /*[[${locations}]]*/ [];
 	locations.forEach(function(loc) {
 		var point = new BMap.Point(loc.lon, loc.lat);
-		var myIcon = new BMap.Icon('bus.gif', new BMap.Size(19, 25), {anchor:new BMap.Size(-10, -25)});
-		var marker = new BMap.Marker(point, {icon:myIcon});
+		var spec = specs[loc.gps_device_id];
+		var marker = new BMap.Marker(point, {icon:IconBuilder.buildMapIcon(spec)});
 		map.addOverlay(marker);
 		markers[loc.gps_device_id] = marker;
 	});
 
 	openWebSocket();
 })
+
+var IconBuilder = {
+	x_offsets: [23, 46, 69, 92, 115, 0],
+	nextSpec: function() {
+		var x_offset = this.x_offsets.shift();
+		this.x_offsets.push(x_offset);
+		return {
+			img: 'markers.gif',
+			x: x_offset,
+			y: 0,
+			w: 19,
+			h: 25,
+			dx: 10,
+			dy: 25
+		};
+	},
+	buildIcon: function(spec) {
+		return $('<span></span>')
+			.width(spec.w)
+			.height(spec.h)
+			.css({
+				'background-image': 'url("' + spec.img + '")',
+				'background-position-x': '-' + spec.x + 'px',
+				'background-position-y': '-' + spec.y + 'px',
+				'display': 'inline-block'
+			});
+	},
+	buildMapIcon: function(spec) {
+		return new BMap.Icon(
+			spec.img,
+			new BMap.Size(spec.w, spec.h),
+			{
+				imageOffset: new BMap.Size(-spec.x, -spec.y),
+				anchor: new BMap.Size(-spec.dx, -spec.dy)
+			}
+		);
+	}
+};
 
 function locateTo(gps_device_id) {
 	if (!cur_did) map.setZoom(14);
