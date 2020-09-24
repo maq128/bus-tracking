@@ -119,7 +119,7 @@ function longPressSupport(sel) {
 			clearTimeout(timer);
 			timer = setTimeout(function() {
 				timer = null;
-				var myEvt = new CustomEvent('btn-long-press');
+				var myEvt = new Event('btn-long-press');
 				btn.each(function(idx, el) {
 					el.dispatchEvent(myEvt);
 				});
@@ -131,7 +131,7 @@ function longPressSupport(sel) {
 			if (btn.length < 0) return;
 			clearTimeout(timer);
 			timer =  null;
-			var myEvt = new CustomEvent('btn-click');
+			var myEvt = new Event('btn-click');
 			btn.each(function(idx, el) {
 				el.dispatchEvent(myEvt);
 			});
