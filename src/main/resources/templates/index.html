@@ -55,10 +55,10 @@ $(function() {
 		specs[line.gps_device_id] = spec;
 		var button = $('<a></a>')
 			.addClass('line')
-			.on('click', function() {
+			.on('btn-click', function() {
 				locateTo(line.gps_device_id, false);
 			})
-			.on('dblclick', function() {
+			.on('btn-long-press', function() {
 				locateTo(line.gps_device_id, true);
 			})
 			.append(IconBuilder.buildIcon(spec))
@@ -66,6 +66,7 @@ $(function() {
 			.appendTo($('#lines'));
 		buttons[line.gps_device_id] = button;
 	});
+	longPressSupport('.line');
 
 	// 创建地图
 	map = new BMap.Map('map'); 
@@ -96,6 +97,58 @@ $(function() {
 
 	openWebSocket();
 })
+
+// 实现一个按钮的“点击”和“长按”功能。
+function longPressSupport(sel) {
+	var delay = 500;
+	var maxDiffX = 10;
+	var maxDiffY = 10;
+	var startX = 0;
+	var startY = 0;
+	var timer = null;
+	var isTouch = (('ontouchstart' in window) || (navigator.MaxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0));
+	var mouseDown = isTouch ? 'touchstart' : 'mousedown';
+	var mouseUp = isTouch ? 'touchend' : 'mouseup';
+	var mouseMove = isTouch ? 'touchmove' : 'mousemove';
+	$(document.body)
+		.on(mouseDown, function(evt) {
+			var btn = $(evt.target).closest(sel);
+			if (btn.length < 0) return;
+			startX = isTouch ? evt.touches[0].clientX : evt.clientX;
+			startY = isTouch ? evt.touches[0].clientY : evt.clientY;
+			clearTimeout(timer);
+			timer = setTimeout(function() {
+				timer = null;
+				var myEvt = new CustomEvent('btn-long-press');
+				btn.each(function(idx, el) {
+					el.dispatchEvent(myEvt);
+				});
+			}, delay);
+		})
+		.on(mouseUp, function(evt) {
+			if (timer == null) return;
+			var btn = $(evt.target).closest(sel);
+			if (btn.length < 0) return;
+			clearTimeout(timer);
+			timer =  null;
+			var myEvt = new CustomEvent('btn-click');
+			btn.each(function(idx, el) {
+				el.dispatchEvent(myEvt);
+			});
+		})
+		.on(mouseMove, function(evt) {
+			var clientX = isTouch ? evt.touches[0].clientX : evt.clientX;
+			var clientY = isTouch ? evt.touches[0].clientY : evt.clientY;
+			if (timer == null) return;
+			if (clientX < startX - maxDiffX ||
+				clientX > startX + maxDiffX ||
+				clientY < startY - maxDiffY ||
+				clientY > startY + maxDiffY) {
+				clearTimeout(timer);
+				timer =  null;
+			}
+		});
+}
 
 var IconBuilder = {
 	x_offsets: [23, 46, 69, 92, 115, 0],
