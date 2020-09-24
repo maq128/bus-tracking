@@ -13,6 +13,7 @@
 a.line {
 	display:inline-block;
 	padding:0.5em 1em;
+	user-select:none;
 }
 a.line.cur {
 	background-color:#eee;
@@ -24,7 +25,8 @@ a.line.cur {
 	border:#ccc solid 1px;
 }
 #map.disconnected {
-	border:red solid 1px;
+	border:#f66 solid 5px;
+	margin:-4px;
 }
 </style>
 </head>
@@ -40,7 +42,8 @@ a.line.cur {
 var map;
 var buttons = {};
 var markers = {};
-var cur_did = null;
+var initShow = true;
+var lockDid = null;
 var websocket;
 
 $(function() {
@@ -53,7 +56,10 @@ $(function() {
 		var button = $('<a></a>')
 			.addClass('line')
 			.on('click', function() {
-				locateTo(line.gps_device_id);
+				locateTo(line.gps_device_id, false);
+			})
+			.on('dblclick', function() {
+				locateTo(line.gps_device_id, true);
 			})
 			.append(IconBuilder.buildIcon(spec))
 			.append($('<span></span>').text(line.name))
@@ -75,7 +81,7 @@ $(function() {
 	scaleControl.setUnit(BMAP_UNIT_METRIC);
 	map.addControl(scaleControl);
 	// 缩放控制
-	var navControl = new BMap.NavigationControl({anchor:BMAP_ANCHOR_TOP_LEFT, type:3});
+	var navControl = new BMap.NavigationControl({anchor:BMAP_ANCHOR_TOP_RIGHT, type:3});
 	map.addControl(navControl);
 
 	// 为每车创建一个标记
@@ -121,15 +127,25 @@ var IconBuilder = {
 	}
 };
 
-function locateTo(gps_device_id) {
-	if (!cur_did) map.setZoom(14);
-	cur_did = gps_device_id;
+function locateTo(gps_device_id, lock) {
+	if (initShow) map.setZoom(14);
+	initShow = false;
+	lockDid = lock ? gps_device_id : null;
 
 	// 更新按钮的状态
 	for (var did in buttons) {
 		var button = buttons[did];
-		if (did == cur_did) {
+		if (did == gps_device_id) {
 			button.addClass('cur');
+			(function(btn) {
+				setTimeout(function() {
+					if (lockDid == null) {
+						btn.removeClass('cur');
+					} else {
+						btn.addClass('cur');
+					}
+				}, 200);
+			})(button);
 		} else {
 			button.removeClass('cur');
 		}
@@ -138,12 +154,24 @@ function locateTo(gps_device_id) {
 	// 显示到指定的标记
 	for (var did in markers) {
 		var marker = markers[did];
-		if (did == cur_did) {
+		if (did == gps_device_id) {
 			marker.setTop(true);
 			map.panTo(marker.getPosition());
 		} else {
 			marker.setTop(false);
 		}
+	}
+}
+
+function refreshLocations(locations) {
+	// 更新所有标记的坐标位置
+	locations.forEach(function(loc) {
+		var marker = markers[loc.gps_device_id];
+		marker.setPosition(new BMap.Point(loc.lon, loc.lat));
+	});
+	if (lockDid != null) {
+		var marker = markers[lockDid];
+		map.panTo(marker.getPosition());
 	}
 }
 
@@ -180,11 +208,7 @@ function openWebSocket() {
 	websocket.onmessage = function (evt) {
 		var json = evt.data;
 		var locations = JSON.parse(json);
-		// 更新所有标记的坐标位置
-		locations.forEach(function(loc) {
-			var marker = markers[loc.gps_device_id];
-			marker.setPosition(new BMap.Point(loc.lon, loc.lat));
-		});
+		refreshLocations(locations);
 	}
 }
 </script>
