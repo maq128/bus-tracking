@@ -96,34 +96,26 @@ var IconBuilder = {
 	nextSpec: function() {
 		var x_offset = this.x_offsets.shift();
 		this.x_offsets.push(x_offset);
-		return {
-			img: 'markers.gif',
-			x: x_offset,
-			y: 0,
-			w: 19,
-			h: 25,
-			dx: 10,
-			dy: 25
-		};
+		return {x: x_offset};
 	},
 	buildIcon: function(spec) {
 		return $('<span></span>')
-			.width(spec.w)
-			.height(spec.h)
+			.width(19)
+			.height(25)
 			.css({
-				'background-image': 'url("' + spec.img + '")',
+				'background-image': 'url(markers.gif)',
 				'background-position-x': '-' + spec.x + 'px',
-				'background-position-y': '-' + spec.y + 'px',
+				'background-position-y': '0px',
 				'display': 'inline-block'
 			});
 	},
 	buildMapIcon: function(spec) {
 		return new BMap.Icon(
-			spec.img,
-			new BMap.Size(spec.w, spec.h),
+			'markers.gif',
+			new BMap.Size(19, 25),
 			{
-				imageOffset: new BMap.Size(-spec.x, -spec.y),
-				anchor: new BMap.Size(-spec.dx, -spec.dy)
+				imageOffset: new BMap.Size(-spec.x, 0),
+				anchor: new BMap.Size(10, 25)
 			}
 		);
 	}
