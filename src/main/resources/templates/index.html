@@ -37,6 +37,7 @@ a.line.cur {
 <div id="map"></div>
 
 <script src="cash.min.js"></script>
+<script src="anime.min.js"></script>
 <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=lv1upIfGGA9Bj69kIcOBU1b86hPxbVpp"></script>
 <script th:inline="javascript">
 var map;
@@ -68,6 +69,24 @@ $(function() {
 	});
 	longPressSupport('.line');
 
+	// 扩展 BMap.Marker 使其支持移动功能
+	BMap.Marker.prototype.moveTo = function(lon, lat) {
+		var me = this;
+		var origPosition = this.getPosition();
+		var animPosition = {lon:origPosition.lng*1000000, lat:origPosition.lat*1000000};
+		anime({
+			targets: animPosition,
+			lon: lon*1000000,
+			lat: lat*1000000,
+			round: 1,
+			duration: 1000,
+			easing: 'linear',
+			update: function() {
+				me.setPosition(new BMap.Point(animPosition.lon/1000000, animPosition.lat/1000000));
+			}
+		});
+	};
+
 	// 创建地图
 	map = new BMap.Map('map'); 
 	map.centerAndZoom(new BMap.Point(116.403874,39.914889), 11);
@@ -96,7 +115,7 @@ $(function() {
 	});
 
 	openWebSocket();
-})
+});
 
 // 实现一个按钮的“点击”和“长按”功能。
 function longPressSupport(sel) {
@@ -220,12 +239,11 @@ function refreshLocations(locations) {
 	// 更新所有标记的坐标位置
 	locations.forEach(function(loc) {
 		var marker = markers[loc.gps_device_id];
-		marker.setPosition(new BMap.Point(loc.lon, loc.lat));
+		marker.moveTo(loc.lon, loc.lat);
+		if (lockDid == loc.gps_device_id) {
+			map.panTo(new BMap.Point(loc.lon, loc.lat));
+		}
 	});
-	if (lockDid != null) {
-		var marker = markers[lockDid];
-		map.panTo(marker.getPosition());
-	}
 }
 
 function openWebSocket() {
