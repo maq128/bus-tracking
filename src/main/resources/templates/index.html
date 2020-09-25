@@ -48,7 +48,7 @@ var lockDid = null;
 var websocket;
 
 $(function() {
-	var lines = /*[[${lines}]]*/ [];
+	var lines = /*[[${lines}]]*/ {};
 	var specs = {};
 	lines.forEach(function(line) {
 		if (line.id < 0) return;
@@ -105,7 +105,7 @@ $(function() {
 	map.addControl(navControl);
 
 	// 为每车创建一个标记
-	var locations = /*[[${locations}]]*/ [];
+	var locations = /*[[${locations}]]*/ {};
 	locations.forEach(function(loc) {
 		var point = new BMap.Point(loc.lon, loc.lat);
 		var spec = specs[loc.gps_device_id];

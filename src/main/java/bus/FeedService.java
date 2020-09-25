@@ -1,7 +1,5 @@
 package bus;
 
-import java.util.Map;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.TaskScheduler;
@@ -30,7 +28,7 @@ public class FeedService {
 		if (WsServerEndpoint.getSessionsNum() == 0) return;
 
 		// 抓取位置信息，并广播推送
-		Map<String, Object>[] locations = apiService.monitorBus(true);
+		Object locations = apiService.monitorBus(true);
 		Gson g = new Gson();
 		String json = g.toJson(locations);
 		WsServerEndpoint.broadcast(json);

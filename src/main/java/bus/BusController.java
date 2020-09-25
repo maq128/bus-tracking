@@ -1,7 +1,6 @@
 package bus;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.lang.Nullable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -13,12 +12,17 @@ public class BusController {
 	ApiService apiService;
 
 	@GetMapping("/")
-	public ModelAndView index(@Nullable @RequestParam Long did) {
+	public ModelAndView index() {
 		ModelAndView mv = new ModelAndView("index");
 
 		mv.addObject("lines", apiService.getBuslines());
 		mv.addObject("locations", apiService.monitorBus(false));
 
 		return mv;
+	}
+
+	@GetMapping("/detail")
+	public Object detail(@RequestParam long id) {
+		return apiService.lineDetail(id);
 	}
 }

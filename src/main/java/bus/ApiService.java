@@ -3,6 +3,8 @@ package bus;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.validation.constraints.NotNull;
+
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -18,35 +20,69 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @Slf4j
 public class ApiService {
-
 	@Autowired
 	CacheService cacheService;
 
-	public Map<String, Object>[] getBuslines() {
-		Map<String, Object>[] lines = (Map<String, Object>[])cacheService.get("lines");
-		if (lines != null) return lines;
+	@NotNull
+	public Object getBuslines() {
+		String cacheKey = "lines";
+		Object value = cacheService.get(cacheKey);
+		if (value != null) return value;
 
-		lines = request("getBuslines");
+		value = request("getBuslines");
 
-		cacheService.put("lines", lines, 3600);
-		return lines;
+		if (value == null) {
+			return new Object();
+		}
+		cacheService.put(cacheKey, value, 3600);
+		return value;
 	}
 
-	public Map<String, Object>[] monitorBus(boolean force) {
+	@NotNull
+	public Object monitorBus(boolean force) {
+		String cacheKey = "locations";
 		if (!force) {
-			Map<String, Object>[] locations = (Map<String, Object>[])cacheService.get("locations");
-			if (locations != null) return locations;
+			Object value = cacheService.get(cacheKey);
+			if (value != null) return value;
 		}
 
-		Map<String, Object>[] locations = request("monitorBus");
+		Object value = request("monitorBus");
 
-		cacheService.put("locations", locations, 30);
-		return locations;
+		if (value == null) {
+			return new Object();
+		}
+		cacheService.put(cacheKey, value, 30);
+		return value;
 	}
 
-	private Map<String, Object>[] request(String name) {
+	@NotNull
+	public Object lineDetail(long id) {
+		String cacheKey = "detail_" + String.valueOf(id);
+		Object value = cacheService.get(cacheKey);
+		if (value != null) return value;
+
+		value = request("lineDetail", id);
+
+		if (value == null) {
+			return new Object();
+		}
+		cacheService.put(cacheKey, value, 3600);
+		return value;
+	}
+
+	private Object request(String name) {
+		return request(name, null);
+	}
+
+	private Object request(String name, long id) {
+		Map<String, String> paramMap = new HashMap<String, String>();
+		paramMap.put("id", String.valueOf(id));
+		return request(name, paramMap);
+	}
+
+	private Object request(String name, Map<String, String> paramMap) {
 		try {
-			String url = ApiUtil.getFullURL(name);
+			String url = ApiUtil.getFullURL(name, paramMap);
 			HttpGet get = new HttpGet(url);
 
 			CloseableHttpClient client = HttpClientBuilder.create().build();
@@ -55,15 +91,24 @@ public class ApiService {
 			response.close();
 
 			Gson g = new Gson();
-			ApiResponse resp = g.fromJson(bodyAsString, ApiResponse.class);
-			if (resp.status == 0) {
-				return resp.data;
-			}
+			Object resp = g.fromJson(bodyAsString, Object.class);
 
-			return new HashMap[0];
+			if (!(resp instanceof Map)) {
+				return null;
+			}
+			Map<String, Object> respMap = (Map<String, Object>)resp;
+			Object status = respMap.get("status");
+			if (status == null || !(status instanceof Number)) {
+				return null;
+			}
+			Number statusNumber = (Number)status;
+			if (statusNumber.longValue() != 0) {
+				return null;
+			}
+			return respMap.get("data");
 		} catch (Exception e) {
 			log.error(e.getMessage());
-			return new HashMap[0];
+			return null;
 		}
 	}
 }
