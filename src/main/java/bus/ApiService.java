@@ -1,6 +1,8 @@
 package bus;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.validation.constraints.NotNull;
@@ -23,51 +25,54 @@ public class ApiService {
 	@Autowired
 	CacheService cacheService;
 
+	@SuppressWarnings("unchecked")
 	@NotNull
-	public Object getBuslines() {
+	public List<Object> getBuslines() {
 		String cacheKey = "lines";
 		Object value = cacheService.get(cacheKey);
-		if (value != null) return value;
+		if (value instanceof List) return (List<Object>)value;
 
 		value = request("getBuslines");
 
-		if (value == null) {
-			return new Object();
+		if (!(value instanceof List)) {
+			return new ArrayList<Object>();
 		}
 		cacheService.put(cacheKey, value, 3600);
-		return value;
+		return (List<Object>)value;
 	}
 
+	@SuppressWarnings("unchecked")
 	@NotNull
-	public Object monitorBus(boolean force) {
+	public List<Object> monitorBus(boolean force) {
 		String cacheKey = "locations";
 		if (!force) {
 			Object value = cacheService.get(cacheKey);
-			if (value != null) return value;
+			if (value instanceof List) return (List<Object>)value;
 		}
 
 		Object value = request("monitorBus");
 
-		if (value == null) {
-			return new Object();
+		if (!(value instanceof List)) {
+			return new ArrayList<Object>();
 		}
 		cacheService.put(cacheKey, value, 30);
-		return value;
+		return (List<Object>)value;
 	}
 
+	@SuppressWarnings("unchecked")
 	@NotNull
-	public Object lineDetail(long id) {
+	public Map<String, Object> lineDetail(long id) {
 		String cacheKey = "detail_" + String.valueOf(id);
 		Object value = cacheService.get(cacheKey);
-		if (value != null) return value;
+		if (value instanceof Map) return (Map<String, Object>)value;
 
 		value = request("lineDetail", id);
 
-		if (value == null) {
-			return new Object();
+		if (!(value instanceof Map)) {
+			return new HashMap<String, Object>();
 		}
 		cacheService.put(cacheKey, value, 3600);
-		return value;
+		return (Map<String, Object>)value;
 	}
 
 	private Object request(String name) {
@@ -96,15 +101,19 @@ public class ApiService {
 			if (!(resp instanceof Map)) {
 				return null;
 			}
+			@SuppressWarnings("unchecked")
 			Map<String, Object> respMap = (Map<String, Object>)resp;
+
 			Object status = respMap.get("status");
 			if (status == null || !(status instanceof Number)) {
 				return null;
 			}
+
 			Number statusNumber = (Number)status;
 			if (statusNumber.longValue() != 0) {
 				return null;
 			}
+
 			return respMap.get("data");
 		} catch (Exception e) {
 			log.error(e.getMessage());

@@ -48,10 +48,12 @@ var lockDid = null;
 var websocket;
 
 $(function() {
-	var lines = /*[[${lines}]]*/ {};
+	var lines = /*[[${lines}]]*/ [];
+	var linesMapping = {};
 	var specs = {};
 	lines.forEach(function(line) {
 		if (line.id < 0) return;
+		linesMapping[line.gps_device_id] = line;
 		var spec = IconBuilder.nextSpec();
 		specs[line.gps_device_id] = spec;
 		var button = $('<a></a>')
@@ -105,11 +107,17 @@ $(function() {
 	map.addControl(navControl);
 
 	// 为每车创建一个标记
-	var locations = /*[[${locations}]]*/ {};
+	var locations = /*[[${locations}]]*/ [];
 	locations.forEach(function(loc) {
+		var line = linesMapping[loc.gps_device_id];
 		var point = new BMap.Point(loc.lon, loc.lat);
 		var spec = specs[loc.gps_device_id];
-		var marker = new BMap.Marker(point, {icon:IconBuilder.buildMapIcon(spec)});
+		var marker = new BMap.Marker(point, {
+			icon: IconBuilder.buildMapIcon(spec),
+			enableMassClear: false
+		});
+		var label = new BMap.Label(line.name, {offset:new BMap.Size(-10, -20)});
+		marker.setLabel(label);
 		map.addOverlay(marker);
 		markers[loc.gps_device_id] = marker;
 	});
