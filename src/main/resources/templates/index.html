@@ -28,6 +28,18 @@ a.line.cur {
 	border:#f66 solid 5px;
 	margin:-4px;
 }
+
+#detail {
+	position:relative;
+	border:#ccc solid 1px;
+	margin-top:4px;
+}
+#detail button {
+	display:block;
+	position:absolute;
+	top:0px;
+	right:0px;
+}
 </style>
 </head>
 <body>
@@ -35,6 +47,8 @@ a.line.cur {
 <div id="lines"></div>
 
 <div id="map"></div>
+
+<div id="detail"></div>
 
 <script src="cash.min.js"></script>
 <script src="anime.min.js"></script>
@@ -103,7 +117,7 @@ $(function() {
 	scaleControl.setUnit(BMAP_UNIT_METRIC);
 	map.addControl(scaleControl);
 	// 缩放控制
-	var navControl = new BMap.NavigationControl({anchor:BMAP_ANCHOR_TOP_RIGHT, type:3});
+	var navControl = new BMap.NavigationControl({anchor:BMAP_ANCHOR_TOP_RIGHT, type:0});
 	map.addControl(navControl);
 
 	// 为每车创建一个标记
@@ -116,7 +130,12 @@ $(function() {
 			icon: IconBuilder.buildMapIcon(spec),
 			enableMassClear: false
 		});
-		var label = new BMap.Label(line.name, {offset:new BMap.Size(-10, -20)});
+		var label = new BMap.Label(line.name, {offset:new BMap.Size(-10, -21)});
+		label.setStyle({
+			border: '1px solid gray',
+			backgroundColor: 'white',
+			color: 'black'
+		});
 		marker.setLabel(label);
 		map.addOverlay(marker);
 		markers[loc.gps_device_id] = marker;
@@ -178,30 +197,40 @@ function longPressSupport(sel) {
 }
 
 var IconBuilder = {
-	x_offsets: [23, 46, 69, 92, 115, 0],
+	y_offsets: [0, 13, 26, 39, 52, 65, 78, 91, 104],
 	nextSpec: function() {
-		var x_offset = this.x_offsets.shift();
-		this.x_offsets.push(x_offset);
-		return {x: x_offset};
+		var y_offset = this.y_offsets.shift();
+		this.y_offsets.push(y_offset);
+		return {y: y_offset};
 	},
 	buildIcon: function(spec) {
 		return $('<span></span>')
-			.width(19)
-			.height(25)
+			.width(25)
+			.height(13)
 			.css({
-				'background-image': 'url(markers.gif)',
-				'background-position-x': '-' + spec.x + 'px',
-				'background-position-y': '0px',
+				'background-image': 'url(markers.png)',
+				'background-position-x': '0px',
+				'background-position-y': '-' + spec.y + 'px',
 				'display': 'inline-block'
 			});
 	},
 	buildMapIcon: function(spec) {
 		return new BMap.Icon(
-			'markers.gif',
-			new BMap.Size(19, 25),
+			'markers.png',
+			new BMap.Size(25, 13),
 			{
-				imageOffset: new BMap.Size(-spec.x, 0),
-				anchor: new BMap.Size(10, 25)
+				imageOffset: new BMap.Size(0, -spec.y),
+				anchor: new BMap.Size(13, 7)
+			}
+		);
+	},
+	buildStationIcon: function() {
+		return new BMap.Icon(
+			'markers.png',
+			new BMap.Size(25, 30),
+			{
+				imageOffset: new BMap.Size(0, -117),
+				anchor: new BMap.Size(13, 30)
 			}
 		);
 	}
@@ -248,9 +277,62 @@ function locateTo(gps_device_id, lock) {
 		.then(function(response) {
 			return response.json();
 		})
-		.then(function(detail) {
-			console.log(detail);
+		.then(showDetail);
+}
+
+function showDetail(detail) {
+	var elDetail = $('#detail');
+	elDetail.empty();
+	$('<button></button>')
+		.text('关闭')
+		.on('click', function() {
+			// 清除线路详情信息
+			elDetail.empty();
+			// 如果没有锁定线路的话，站牌标记也要清除
+			if (lockDid == null) map.clearOverlays();
+		})
+		.appendTo(elDetail);
+	$('<div></div>')
+		.append($('<b></b>').text(detail.name))
+		.appendTo(elDetail);
+
+	$('<div></div>')
+		.text('早班车：' + detail.go_name)
+		.appendTo(elDetail);
+	detail.go_line.forEach(function(stop) {
+		$('<div></div>')
+			.text('　　' + stop.reach_time.slice(0,5) + ' ' + stop.station.name)
+			.appendTo(elDetail);
+	})
+
+	$('<div></div>')
+		.text('晚班车：' + detail.back_name)
+		.appendTo(elDetail);
+	detail.back_line.forEach(function(stop) {
+		$('<div></div>')
+			.text('　　' + stop.reach_time.slice(0,5) + ' ' + stop.station.name)
+			.appendTo(elDetail);
+	})
+
+	// 为每个车站创建一个标记
+	map.clearOverlays();
+	var stops = detail[new Date().getHours()<=12 ? 'go_line' : 'back_line'];
+	stops.forEach(function(stop) {
+		var station = stop.station;
+		var point = new BMap.Point(station.lon, station.lat);
+		var marker = new BMap.Marker(point, {
+			icon: IconBuilder.buildStationIcon(),
+			enableMassClear: true
 		});
+		var label = new BMap.Label(station.name, {offset:new BMap.Size(-4*station.name.length, -21)});
+		label.setStyle({
+			border: '1px solid rgb(0 94 169)',
+			backgroundColor: '#FFC107',
+			color: 'blue'
+		});
+		marker.setLabel(label);
+		map.addOverlay(marker);
+	});
 }
 
 function refreshLocations(locations) {
