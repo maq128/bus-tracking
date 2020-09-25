@@ -45,11 +45,11 @@ var buttons = {};
 var markers = {};
 var initShow = true;
 var lockDid = null;
+var linesMapping = {};
 var websocket;
 
 $(function() {
 	var lines = /*[[${lines}]]*/ [];
-	var linesMapping = {};
 	var specs = {};
 	lines.forEach(function(line) {
 		if (line.id < 0) return;
@@ -241,6 +241,16 @@ function locateTo(gps_device_id, lock) {
 			marker.setTop(false);
 		}
 	}
+
+	// 获取并显示线路详情
+	line = linesMapping[gps_device_id];
+	fetch('/detail?id=' + line.id)
+		.then(function(response) {
+			return response.json();
+		})
+		.then(function(detail) {
+			console.log(detail);
+		});
 }
 
 function refreshLocations(locations) {
