@@ -28,6 +28,9 @@ a.line.cur {
 	border:#f66 solid 5px;
 	margin:-4px;
 }
+#map.refreshing {
+	border:#ff8000 solid 1px;
+}
 
 #detail {
 	position:relative;
@@ -64,12 +67,9 @@ var websocket;
 
 $(function() {
 	var lines = /*[[${lines}]]*/ [];
-	var specs = {};
 	lines.forEach(function(line) {
 		if (line.id < 0) return;
 		linesMapping[line.gps_device_id] = line;
-		var spec = IconBuilder.nextSpec();
-		specs[line.gps_device_id] = spec;
 		var button = $('<a></a>')
 			.addClass('line')
 			.on('btn-click', function() {
@@ -78,7 +78,7 @@ $(function() {
 			.on('btn-long-press', function() {
 				locateTo(line.gps_device_id, true);
 			})
-			.append(IconBuilder.buildIcon(spec))
+			.append(IconBuilder.buildBusIcon(line.id))
 			.append($('<span></span>').text(line.name))
 			.appendTo($('#lines'));
 		buttons[line.gps_device_id] = button;
@@ -89,6 +89,7 @@ $(function() {
 	BMap.Marker.prototype.moveTo = function(lon, lat) {
 		var me = this;
 		var origPosition = this.getPosition();
+		if (origPosition.lng == lon && origPosition.lat == lat) return false;
 		var animPosition = {lon:origPosition.lng*1000000, lat:origPosition.lat*1000000};
 		anime({
 			targets: animPosition,
@@ -101,6 +102,7 @@ $(function() {
 				me.setPosition(new BMap.Point(animPosition.lon/1000000, animPosition.lat/1000000));
 			}
 		});
+		return true;
 	};
 
 	// 创建地图
@@ -124,19 +126,7 @@ $(function() {
 	var locations = /*[[${locations}]]*/ [];
 	locations.forEach(function(loc) {
 		var line = linesMapping[loc.gps_device_id];
-		var point = new BMap.Point(loc.lon, loc.lat);
-		var spec = specs[loc.gps_device_id];
-		var marker = new BMap.Marker(point, {
-			icon: IconBuilder.buildMapIcon(spec),
-			enableMassClear: false
-		});
-		var label = new BMap.Label(line.name, {offset:new BMap.Size(-10, -21)});
-		label.setStyle({
-			border: '1px solid gray',
-			backgroundColor: 'white',
-			color: 'black'
-		});
-		marker.setLabel(label);
+		var marker = IconBuilder.buildBusMarker(line.id, loc.lon, loc.lat, line.name);
 		map.addOverlay(marker);
 		markers[loc.gps_device_id] = marker;
 	});
@@ -197,42 +187,59 @@ function longPressSupport(sel) {
 }
 
 var IconBuilder = {
-	y_offsets: [0, 13, 26, 39, 52, 65, 78, 91, 104],
-	nextSpec: function() {
-		var y_offset = this.y_offsets.shift();
-		this.y_offsets.push(y_offset);
-		return {y: y_offset};
-	},
-	buildIcon: function(spec) {
+	y_offsets: [0, 13, 26, 39, 52, 65, 78, 91],
+	buildBusIcon: function(id) {
+		var y_offset = this.y_offsets[id % this.y_offsets.length];
 		return $('<span></span>')
 			.width(25)
 			.height(13)
 			.css({
 				'background-image': 'url(markers.png)',
 				'background-position-x': '0px',
-				'background-position-y': '-' + spec.y + 'px',
+				'background-position-y': '-' + y_offset + 'px',
 				'display': 'inline-block'
 			});
 	},
-	buildMapIcon: function(spec) {
-		return new BMap.Icon(
+	buildBusMarker: function(id, lon, lat, name) {
+		var y_offset = this.y_offsets[id % this.y_offsets.length];
+		var point = new BMap.Point(lon, lat);
+		var icon = new BMap.Icon(
 			'markers.png',
 			new BMap.Size(25, 13),
 			{
-				imageOffset: new BMap.Size(0, -spec.y),
+				imageOffset: new BMap.Size(0, -y_offset),
 				anchor: new BMap.Size(13, 7)
 			}
 		);
+		var marker = new BMap.Marker(point, {icon: icon,enableMassClear:false});
+		var label = new BMap.Label(name, {offset:new BMap.Size(-10, -21)});
+		label.setStyle({
+			border: '1px solid gray',
+			backgroundColor: 'white',
+			color: 'black'
+		});
+		marker.setLabel(label);
+		return marker;
 	},
-	buildStationIcon: function() {
-		return new BMap.Icon(
+	buildStationMarker: function(station) {
+		var point = new BMap.Point(station.lon, station.lat);
+		var icon = new BMap.Icon(
 			'markers.png',
 			new BMap.Size(25, 30),
 			{
-				imageOffset: new BMap.Size(0, -117),
+				imageOffset: new BMap.Size(0, -104),
 				anchor: new BMap.Size(13, 30)
 			}
 		);
+		var marker = new BMap.Marker(point, {icon:icon, enableMassClear:true});
+		var label = new BMap.Label(station.name, {offset:new BMap.Size(-4*station.name.length, -21)});
+		label.setStyle({
+			border: '1px solid rgb(0 94 169)',
+			backgroundColor: '#FFC107',
+			color: 'blue'
+		});
+		marker.setLabel(label);
+		return marker;
 	}
 };
 
@@ -319,28 +326,21 @@ function showDetail(detail) {
 	var stops = detail[new Date().getHours()<=12 ? 'go_line' : 'back_line'];
 	stops.forEach(function(stop) {
 		var station = stop.station;
-		var point = new BMap.Point(station.lon, station.lat);
-		var marker = new BMap.Marker(point, {
-			icon: IconBuilder.buildStationIcon(),
-			enableMassClear: true
-		});
-		var label = new BMap.Label(station.name, {offset:new BMap.Size(-4*station.name.length, -21)});
-		label.setStyle({
-			border: '1px solid rgb(0 94 169)',
-			backgroundColor: '#FFC107',
-			color: 'blue'
-		});
-		marker.setLabel(label);
+		var marker = IconBuilder.buildStationMarker(station);
 		map.addOverlay(marker);
 	});
 }
 
 function refreshLocations(locations) {
+	$('#map').addClass('refreshing');
+	setTimeout(function() {
+		$('#map').removeClass('refreshing');
+	}, 1000);
 	// 更新所有标记的坐标位置
 	locations.forEach(function(loc) {
 		var marker = markers[loc.gps_device_id];
-		marker.moveTo(loc.lon, loc.lat);
-		if (lockDid == loc.gps_device_id) {
+		var moved = marker.moveTo(loc.lon, loc.lat);
+		if (moved && lockDid == loc.gps_device_id) {
 			map.panTo(new BMap.Point(loc.lon, loc.lat));
 		}
 	});
