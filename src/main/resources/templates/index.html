@@ -126,6 +126,7 @@ $(function() {
 	var locations = /*[[${locations}]]*/ [];
 	locations.forEach(function(loc) {
 		var line = linesMapping[loc.gps_device_id];
+		if (!line) return;
 		var marker = IconBuilder.buildBusMarker(line.id, loc.lon, loc.lat, line.name);
 		map.addOverlay(marker);
 		markers[loc.gps_device_id] = marker;
@@ -339,6 +340,7 @@ function refreshLocations(locations) {
 	// 更新所有标记的坐标位置
 	locations.forEach(function(loc) {
 		var marker = markers[loc.gps_device_id];
+		if (!marker) return;
 		var moved = marker.moveTo(loc.lon, loc.lat);
 		if (moved && lockDid == loc.gps_device_id) {
 			map.panTo(new BMap.Point(loc.lon, loc.lat));
