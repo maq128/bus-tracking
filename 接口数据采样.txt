@@ -1,0 +1,108 @@
+# 接口来源
+
+	微信公众号：世纪互联行政服务
+
+	http://jfzg.21vianet.com/xingzheng/
+
+
+# 班车列表
+
+POST http://jfzg.21vianet.com/xingzheng/banche/line/getRealBancheLineList
+{}
+
+{"code":"0","message":"success","result":[
+{"backName":"公司-幸福艺居（下）","carNo":"京G55009","carUser":"car01","cateId":"13","course":"14","driver":"张洁","driverTel":"18910286518","goName":"幸福艺居(上)-公司","gpsDeviceId":"868120219407571","gpsDeviceInfo":"0","gpsDevicePassword":"868120107837780 ","gpsDeviceUser":"gspuser1","gpsStatus":"3","id":"1","isFull":"0","lat":"39.957559","lon":"116.540072","name":"1号班车","no":"1","password":"123456","remark":"温馨提示：请您至少提前5分钟到达班车地点，以免影响您的班车出行","speed":"0"},
+{"backName":"公司-物资学院（下）","carNo":"京AG3368","carUser":"car02","cateId":"14","driver":"郭丹","driverTel":"13466324529","goName":"北关-公司","gpsDeviceId":"868120119409842","gpsDevicePassword":"123456","gpsDeviceUser":"gspuser2","gpsStatus":"3","id":"2","isFull":"1","lat":"39.876966","lon":"116.699591","name":"2号班车","no":"2","password":"123456","remark":"温馨提示：请您至少提前10分钟到达班车地点，以免影响您的班车出行","speed":"0"},
+{"backName":"公司-草桥（下）","carNo":"京G50306","carUser":"car03","cateId":"15","driver":"张然","driverTel":"18910286531","goName":"草桥(上)-公司","gpsDeviceId":"868120168067384","gpsDevicePassword":"123456","gpsDeviceUser":"gspuser3","gpsStatus":"0","id":"3","isFull":"0","lat":"39.920191","lon":"116.496360","name":"3号班车","no":"3","password":"123456","remark":"温馨提示：请您至少提前10分钟到达班车地点，以免影响您的班车出行","speed":"0"},
+{"backName":"公司-西三旗（下）","carNo":"京G60469","carUser":"car04","cateId":"16","driver":"邵艾","driverTel":"13426465895","goName":"西三旗-公司","gpsDeviceId":"862459045105793","gpsDevicePassword":"123456","gpsDeviceUser":"gspuser4","gpsStatus":"4","id":"4","isFull":"0","lat":"40.078079","lon":"116.345088","name":"4号班车","no":"4","password":"123456","remark":"温馨提示：请您至少提前10分钟到达班车地点，以免影响您的班车出行","speed":"0"},
+{"backName":"公司-朱辛庄","carNo":"京G60480","carUser":"car05","cateId":"17","driver":"张莹","driverTel":"13911525069","goName":"朱辛庄-公司","gpsDeviceId":"866005045891050","gpsDevicePassword":"123456","gpsDeviceUser":"gspuser5","gpsStatus":"4","id":"5","isFull":"0","lat":"39.986598","lon":"116.505288","name":"5号班车","no":"5","password":"123456","remark":"温馨提示：请您至少提前10分钟到达班车地点，以免影响您的班车出行","speed":"0"},
+{"backName":"公司-金顶街（下）","carNo":"京G54903","carUser":"car06","cateId":"18","driver":"张金","driverTel":"15801592223","goName":"金顶街(上)-公司","gpsDeviceId":"868120219406144","gpsDevicePassword":"123456","gpsDeviceUser":"gspuser6","gpsStatus":"4","id":"6","isFull":"0","lat":"39.986661","lon":"116.505050","name":"6号班车","no":"6","password":"123456","remark":"温馨提示：请您至少提前10分钟到达班车地点，以免影响您的班车出行","speed":"0"},
+{
+	"backName":"公司-丰台路口（下）",
+	"carNo":"京G54993",
+	"carUser":"car07",
+	"cateId":"19",
+	"driver":"杨晓颖",
+	"driverTel":"13810737605",
+	"goName":"丰台路口(上)-公司",
+	"gpsDeviceId":"868120205237610",
+	"gpsDevicePassword":"123456",
+	"gpsDeviceUser":"gspuser7",
+	"gpsStatus":"0",
+	"id":"7",
+	"isFull":"0",
+	"lat":"39.890722",
+	"lon":"116.496322",
+	"name":"7号班车",
+	"no":"7",
+	"password":"123456",
+	"remark":"温馨提示：请您至少提前10分钟到达班车地点，以免影响您的班车出行",
+	"speed":"0"
+},
+{"backName":"公司-天通苑（下）","carNo":"京AH1527","carUser":"car08","cateId":"12","driver":"苏红","driverTel":"18600360795","goName":"天通苑-公司","gpsDeviceId":"868120205238089","gpsDevicePassword":"123456","gpsDeviceUser":"gspuser8","gpsStatus":"4","id":"8","isFull":"0","lat":"39.998623","lon":"116.478111","name":"8号班车","no":"8","password":"123456","remark":"温馨提示：请您至少提前10分钟到达班车地点，以免影响您的班车出行","speed":"0"},
+{"backName":"小红门（下）-黄村火车站（下）","carNo":"1","carUser":"1","cateId":"21","driver":"李雅","driverTel":"13683345812","goName":"黄村火车站-小红门(上)","gpsDeviceId":"868120205240234","gpsStatus":"4","id":"21","lat":"39.986591","lon":"116.506450","name":"9号班车","no":"9","password":"123456","remark":"温馨提示：请您至少提前10分钟到达班车地点，以免影响您的班车出行","speed":"0"}
+],"success":true}
+
+
+# 班车线路详情
+
+POST http://jfzg.21vianet.com/xingzheng/banche/line/getRealBancheLineDetail
+{"id":"7"}
+
+{"code":"0","message":"success","result":{
+	"backName":"公司-丰台路口（下）",
+	"carNo":"京G54993",
+	"carUser":"car07",
+	"cateId":"19",
+	"driver":"杨晓颖",
+	"driverTel":"13810737605",
+	"goName":"丰台路口(上)-公司",
+	"gpsDeviceId":"868120205237610",
+	"gpsDevicePassword":"123456",
+	"gpsDeviceUser":"gspuser7",
+	"gpsStatus":"0",
+	"id":"7",
+	"isFull":"0",
+	"lat":"39.895886",
+	"lon":"116.496397",
+	"name":"7号班车",
+	"no":"7",
+	"password":"123456",
+	"remark":"温馨提示：请您至少提前10分钟到达班车地点，以免影响您的班车出行",
+	"speed":"0",
+	"stationDownList":[
+		{"id":"107","lat":"39.984534","lon":"116.506409","name":"公司","reachTime":"00:00:00"},
+		{"id":"279","lat":"39.975003","lon":"116.408581","name":"木偶剧院","reachTime":"00:00:00"},
+		{"id":"245","lat":"39.97454","lon":"116.390319","name":"马甸（下）","reachTime":"00:00:00"},
+		{"id":"157","lat":"39.973601","lon":"116.372587","name":"北影(上)","reachTime":"00:00:00"},
+		{"id":"223","lat":"39.971482","lon":"116.323435","name":"三义庙（下）","reachTime":"00:00:00"},
+		{"id":"225","lat":"39.897588","lon":"116.316545","name":"六里桥（下）","reachTime":"00:00:00"},
+		{"id":"226","lat":"39.88091","lon":"116.285469","name":"丰台路口（下）","reachTime":"00:00:00"}
+	],
+	"stationUpList":[
+		{"id":"151","lat":"39.881272","lon":"116.28555","name":"丰台路口(上)","reachTime":"07:25:00"},
+		{"id":"152","lat":"39.896079","lon":"116.317145","name":"六里桥(上)","reachTime":"07:45:00"},
+		{"id":"154","lat":"39.970716","lon":"116.322563","name":"三义庙(上)","reachTime":"08:05:00"},
+		{"id":"157","lat":"39.973601","lon":"116.372587","name":"北影(上)","reachTime":"08:10:00"},
+		{"id":"156","lat":"39.974268","lon":"116.391198","name":"马甸(上)","reachTime":"08:15:00"},
+		{"id":"279","lat":"39.975003","lon":"116.408581","name":"木偶剧院","reachTime":"08:19:00"},
+		{"id":"107","lat":"39.984534","lon":"116.506409","name":"公司","reachTime":"08:50:00"}
+	]
+},"success":true}
+
+
+# 班车位置信息推送
+
+ws://jfzg.21vianet.com/xingzheng/websocket/banche/position
+
+[
+{"gpsStatus":"3","imei":"868120219407571","lon":"116.540072","lat":"39.957559","speed":"58"},
+{"gpsStatus":"3","imei":"868120119409842","lon":"116.699591","lat":"39.876966","speed":"0"},
+{"gpsStatus":"0","imei":"868120168067384","lon":"116.496486","lat":"39.951066","speed":"61"},
+{"gpsStatus":"4","imei":"862459045105793","lon":"116.345088","lat":"40.078079","speed":"0"},
+{"gpsStatus":"4","imei":"866005045891050","lon":"116.505006","lat":"39.986416","speed":"0"},
+{"gpsStatus":"4","imei":"868120219406144","lon":"116.505050","lat":"39.986661","speed":"0"},
+{"gpsStatus":"0","imei":"868120205237610","lon":"116.496398","lat":"39.916806","speed":"14"},
+{"gpsStatus":"4","imei":"868120205238089","lon":"116.478049","lat":"39.998529","speed":"0"},
+{"gpsStatus":"4","imei":"868120205240234","lon":"116.506450","lat":"39.986591","speed":"0"}
+]
