@@ -68,7 +68,7 @@ public class WsServerEndpoint {
 	...
 }
 ```
-不过这种用法需要注意静态属性的并发访问问题。
+不过这种用法需要注意静态属性的并发访问问题，而且这个方法本质上还是在 Beans 容器里创建了一个“多余”的实例。
 
 还有一些解决的办法可以从下面这个帖子里面找到：
 [@ServerEndpoint and @Autowired](https://stackoverflow.com/questions/29306854/serverendpoint-and-autowired)
