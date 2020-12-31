@@ -35,14 +35,13 @@ docker run -d --name=bus-tracking --network=main_network bus-tracking
 
 一个 `ServerEndpointExporter` 实例可用于自动发现并注册 `ServerEndpoint` 类，它缺省的发现逻辑是扫描 Spring 的 Beans
 容器里面的实例，过滤出其中加了 `@ServerEndpoint` 注解的类作为“模板”，给每个新建立的连接创建一个实例。而 Beans 容器里面
-的那个实例就废弃了。也是这个原因，导致 `ServerEndpoint` 类里面的 `@Autowired` 注解无法达到预期的效果。
+的那个实例就废弃了。（也是这个原因，导致 `ServerEndpoint` 类里面的 `@Autowired` 注解无法达到预期的效果。）
 
 也可以调用 `ServerEndpointExporter.setAnnotatedEndpointClasses()` 直接指定 `ServerEndpoint` 类，从而绕过自动发现。
+本程序使用了这个方法，从而避免在 Beans 容器中创建一个“多余”的实例。
 
 
-# `@ServerEndpoint` 跟 `@Autowired` 不能同时用的问题
-
-[@ServerEndpoint and @Autowired](https://stackoverflow.com/questions/29306854/serverendpoint-and-autowired)
+# `ServerEndpoint` 类里面的 `@Autowired` 注解不起作用的问题
 
 `ServerEndpoint` 类缺省情况下是为每个连接创建一个实例，所以在这个类里面使用 `@Autowired` 无法实现自动绑定的效果。
 
@@ -70,6 +69,9 @@ public class WsServerEndpoint {
 }
 ```
 不过这种用法需要注意静态属性的并发访问问题。
+
+还有一些解决的办法可以从下面这个帖子里面找到：
+[@ServerEndpoint and @Autowired](https://stackoverflow.com/questions/29306854/serverendpoint-and-autowired)
 
 
 # 定时任务问题
