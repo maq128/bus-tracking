@@ -1,6 +1,5 @@
 package bus;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -8,10 +7,11 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Service;
 
-import com.google.gson.Gson;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @EnableScheduling
+@Slf4j
 public class FeedService {
 	@Bean
 	public TaskScheduler taskScheduler() {
@@ -19,18 +19,38 @@ public class FeedService {
 		return scheduler;
 	}
 
-	@Autowired
-	ApiService apiService;
+	final static String wsEndpoint = "ws://jfzg.21vianet.com/xingzheng/websocket/banche/position";
 
-	@Scheduled(fixedDelay = 15000)
-	public void broadcast() {
-		// 如果无人在线，则跳过
-		if (WsServerEndpoint.getSessionsNum() == 0) return;
+	private String lastJson;
+	private WsClientEndpoint wsClient;
 
-		// 抓取位置信息，并广播推送
-		Object locations = apiService.monitorBus(true);
-		Gson g = new Gson();
-		String json = g.toJson(locations);
-		WsServerEndpoint.broadcast(json);
+	@Scheduled(fixedDelay = 5000)
+	public void healthcheck() {
+		if (wsClient == null) {
+			wsClient = new WsClientEndpoint(wsEndpoint, new WsClientEndpoint.MessageHandler() {
+				public void handleMessage(String json) {
+					// 如果是重复内容，则跳过
+					if (json.equals(lastJson)) {
+						log.trace("handleTextMessage: duplicated message, skip.");
+						return;
+					}
+					lastJson = json;
+
+					log.trace("handleTextMessage: {}", json);
+
+					// 广播推送消息
+					// TODO: 避免发送时间过长，导致新消息重叠
+					WsServerEndpoint.broadcast(json);
+				}
+			});
+		}
+
+		if (WsServerEndpoint.getSessionsNum() > 0) {
+			// 有用户在线，需要持续获取数据
+			wsClient.connect();
+		} else {
+			// 没有用户在线，停止获取数据，以节省流量
+			wsClient.disconnect();
+		}
 	}
 }

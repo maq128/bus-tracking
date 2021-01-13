@@ -68,20 +68,19 @@ var websocket;
 $(function() {
 	var lines = /*[[${lines}]]*/ [];
 	lines.forEach(function(line) {
-		if (line.id < 0) return;
-		linesMapping[line.gps_device_id] = line;
+		linesMapping[line.gpsDeviceId] = line;
 		var button = $('<a></a>')
 			.addClass('line')
 			.on('btn-click', function() {
-				locateTo(line.gps_device_id, false);
+				locateTo(line.gpsDeviceId, false);
 			})
 			.on('btn-long-press', function() {
-				locateTo(line.gps_device_id, true);
+				locateTo(line.gpsDeviceId, true);
 			})
 			.append(IconBuilder.buildBusIcon(line.id))
 			.append($('<span></span>').text(line.name))
 			.appendTo($('#lines'));
-		buttons[line.gps_device_id] = button;
+		buttons[line.gpsDeviceId] = button;
 	});
 	longPressSupport('.line');
 
@@ -121,17 +120,16 @@ $(function() {
 	// 缩放控制
 	var navControl = new BMap.NavigationControl({anchor:BMAP_ANCHOR_TOP_RIGHT, type:0});
 	map.addControl(navControl);
+	// 交通流量图层
+	var traffic = new BMap.TrafficLayer();      
+	map.addTileLayer(traffic);
 
 	// 为每车创建一个标记
-	var locations = /*[[${locations}]]*/ [];
-	locations.forEach(function(loc) {
-		var line = linesMapping[loc.gps_device_id];
-		if (!line) return;
-		var marker = IconBuilder.buildBusMarker(line.id, loc.lon, loc.lat, line.name);
+	lines.forEach(function(line) {
+		var marker = IconBuilder.buildBusMarker(line.id, line.lon, line.lat, line.name);
 		map.addOverlay(marker);
-		markers[loc.gps_device_id] = marker;
+		markers[line.gpsDeviceId] = marker;
 	});
-
 	openWebSocket();
 });
 
@@ -244,15 +242,15 @@ var IconBuilder = {
 	}
 };
 
-function locateTo(gps_device_id, lock) {
+function locateTo(gpsDeviceId, lock) {
 	if (initShow) map.setZoom(14);
 	initShow = false;
-	lockDid = lock ? gps_device_id : null;
+	lockDid = lock ? gpsDeviceId : null;
 
 	// 更新按钮的状态
 	for (var did in buttons) {
 		var button = buttons[did];
-		if (did == gps_device_id) {
+		if (did == gpsDeviceId) {
 			button.addClass('cur');
 			(function(btn) {
 				setTimeout(function() {
@@ -271,7 +269,7 @@ function locateTo(gps_device_id, lock) {
 	// 显示到指定的标记
 	for (var did in markers) {
 		var marker = markers[did];
-		if (did == gps_device_id) {
+		if (did == gpsDeviceId) {
 			marker.setTop(true);
 			map.panTo(marker.getPosition());
 		} else {
@@ -280,7 +278,7 @@ function locateTo(gps_device_id, lock) {
 	}
 
 	// 获取并显示线路详情
-	line = linesMapping[gps_device_id];
+	line = linesMapping[gpsDeviceId];
 	fetch('/detail?id=' + line.id)
 		.then(function(response) {
 			return response.json();
@@ -305,29 +303,28 @@ function showDetail(detail) {
 		.appendTo(elDetail);
 
 	$('<div></div>')
-		.text('早班车：' + detail.go_name)
+		.text('早班车：' + detail.goName)
 		.appendTo(elDetail);
-	detail.go_line.forEach(function(stop) {
+	detail.stationUpList.forEach(function(stop) {
 		$('<div></div>')
-			.text('　　' + stop.reach_time.slice(0,5) + ' ' + stop.station.name)
+			.text('　　' + stop.reachTime.slice(0, 5) + ' ' + stop.name)
 			.appendTo(elDetail);
 	})
 
 	$('<div></div>')
-		.text('晚班车：' + detail.back_name)
+		.text('晚班车：' + detail.backName)
 		.appendTo(elDetail);
-	detail.back_line.forEach(function(stop) {
+	detail.stationDownList.forEach(function(stop) {
 		$('<div></div>')
-			.text('　　' + stop.reach_time.slice(0,5) + ' ' + stop.station.name)
+			.text('　　' + stop.reachTime.slice(0, 5) + ' ' + stop.name)
 			.appendTo(elDetail);
 	})
 
 	// 为每个车站创建一个标记
 	map.clearOverlays();
-	var stops = detail[new Date().getHours()<=12 ? 'go_line' : 'back_line'];
+	var stops = detail[new Date().getHours()<=12 ? 'stationUpList' : 'stationDownList'];
 	stops.forEach(function(stop) {
-		var station = stop.station;
-		var marker = IconBuilder.buildStationMarker(station);
+		var marker = IconBuilder.buildStationMarker(stop);
 		map.addOverlay(marker);
 	});
 }
@@ -339,10 +336,10 @@ function refreshLocations(locations) {
 	}, 1000);
 	// 更新所有标记的坐标位置
 	locations.forEach(function(loc) {
-		var marker = markers[loc.gps_device_id];
+		var marker = markers[loc.imei];
 		if (!marker) return;
 		var moved = marker.moveTo(loc.lon, loc.lat);
-		if (moved && lockDid == loc.gps_device_id) {
+		if (moved && lockDid == loc.imei) {
 			map.panTo(new BMap.Point(loc.lon, loc.lat));
 		}
 	});

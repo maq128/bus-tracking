@@ -8,7 +8,8 @@ import java.util.Map;
 import javax.validation.constraints.NotNull;
 
 import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
@@ -22,6 +23,8 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @Slf4j
 public class ApiService {
+	final static String prefix = "http://jfzg.21vianet.com/xingzheng/banche/line/";
+
 	@Autowired
 	CacheService cacheService;
 
@@ -32,30 +35,12 @@ public class ApiService {
 		Object value = cacheService.get(cacheKey);
 		if (value instanceof List) return (List<Object>)value;
 
-		value = request("getBuslines");
+		value = request("getRealBancheLineList", null);
 
 		if (!(value instanceof List)) {
 			return new ArrayList<Object>();
 		}
 		cacheService.put(cacheKey, value, 3600);
-		return (List<Object>)value;
-	}
-
-	@SuppressWarnings("unchecked")
-	@NotNull
-	public List<Object> monitorBus(boolean force) {
-		String cacheKey = "locations";
-		if (!force) {
-			Object value = cacheService.get(cacheKey);
-			if (value instanceof List) return (List<Object>)value;
-		}
-
-		Object value = request("monitorBus");
-
-		if (!(value instanceof List)) {
-			return new ArrayList<Object>();
-		}
-		cacheService.put(cacheKey, value, 30);
 		return (List<Object>)value;
 	}
 
@@ -66,7 +51,7 @@ public class ApiService {
 		Object value = cacheService.get(cacheKey);
 		if (value instanceof Map) return (Map<String, Object>)value;
 
-		value = request("lineDetail", id);
+		value = request("getRealBancheLineDetail", id);
 
 		if (!(value instanceof Map)) {
 			return new HashMap<String, Object>();
@@ -75,46 +60,39 @@ public class ApiService {
 		return (Map<String, Object>)value;
 	}
 
-	private Object request(String name) {
-		return request(name, null);
-	}
-
-	private Object request(String name, long id) {
-		Map<String, String> paramMap = new HashMap<String, String>();
-		paramMap.put("id", String.valueOf(id));
-		return request(name, paramMap);
-	}
-
-	private Object request(String name, Map<String, String> paramMap) {
+	private Object request(String name, Long id) {
 		try {
-			String url = ApiUtil.getFullURL(name, paramMap);
-			HttpGet get = new HttpGet(url);
+			String url = prefix + name;
+
+			HttpPost post = new HttpPost(url);
+			post.addHeader("Content-Type", "application/json;charset=UTF-8");
+			Map<String, Object> parameters = new HashMap<String, Object>();
+			if (id != null) {
+				parameters.put("id", id);
+			}
+			Gson g = new Gson();
+			StringEntity stringEntity = new StringEntity(g.toJson(parameters), "UTF-8");
+            post.setEntity(stringEntity);
 
 			CloseableHttpClient client = HttpClientBuilder.create().build();
-			CloseableHttpResponse response = client.execute(get);
+			CloseableHttpResponse response = client.execute(post);
 			String bodyAsString = EntityUtils.toString(response.getEntity());
 			response.close();
+			client.close();
 
-			Gson g = new Gson();
 			Object resp = g.fromJson(bodyAsString, Object.class);
-
 			if (!(resp instanceof Map)) {
 				return null;
 			}
 			@SuppressWarnings("unchecked")
 			Map<String, Object> respMap = (Map<String, Object>)resp;
 
-			Object status = respMap.get("status");
-			if (status == null || !(status instanceof Number)) {
+			Object message = respMap.get("message");
+			if (message == null || !(message instanceof String) || !"success".equals(message)) {
 				return null;
 			}
 
-			Number statusNumber = (Number)status;
-			if (statusNumber.longValue() != 0) {
-				return null;
-			}
-
-			return respMap.get("data");
+			return respMap.get("result");
 		} catch (Exception e) {
 			log.error(e.getMessage());
 			return null;

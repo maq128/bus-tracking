@@ -1,10 +1,19 @@
 # 项目说明
 
+<strike>
 世纪互联提供的“行政服务app”里面可以查看班车位置。
 
 [app下载](http://211.151.82.84:35257/APPdownload.php)
 
 本项目基于对这个 app 的逆向工程，实现了简易的班车位置查询功能。
+</strike>
+
+世纪互联的“行政服务app”已经弃用了，改用微信公众号“世纪互联行政服务”。
+可以在 [这个H5页面](http://jfzg.21vianet.com/xingzheng) 查询班车信息。
+
+在这个H5页面里通过访问服务器端API接口来获取班车信息，具体内容可参见[接口数据采样.txt](接口数据采样.txt)。
+
+本项目即是基于这些API实现了简易的班车位置查询功能，使用体验比那个H5页面顺手一点。
 
 
 # docker 打包运行
@@ -87,3 +96,10 @@ public class WsServerEndpoint {
 		return scheduler;
 	}
 ```
+
+
+# WebSocket 客户端实现方案
+
+Spring Framework 自带了 WebSocket client 支持，但是功能特别简陋，不好用，比如很难检测到连接失败。
+
+直接使用 `javax.websocket` 更简单。

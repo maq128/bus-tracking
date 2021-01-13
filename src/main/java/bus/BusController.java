@@ -16,7 +16,6 @@ public class BusController {
 		ModelAndView mv = new ModelAndView("index");
 
 		mv.addObject("lines", apiService.getBuslines());
-		mv.addObject("locations", apiService.monitorBus(false));
 
 		return mv;
 	}
