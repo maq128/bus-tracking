@@ -1,6 +1,7 @@
 package bus;
 
 import java.io.IOException;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.websocket.OnClose;
@@ -44,20 +45,57 @@ public class WsServerEndpoint {
 		return sessions.size();
 	}
 
-	public static void broadcast(String json) {
-		log.trace("WsServerEndpoint.broadcast: {}", sessions.size());
-		lastJson = json;
-		for (String id : sessions.keySet()) {
-			Session session = sessions.get(id);
-			try {
-				session.getBasicRemote().sendText(json);
-			} catch (Exception e) {
+	public static CompletableFuture<Void> broadcast(final String json) {
+		return CompletableFuture.runAsync(()->{
+			log.trace("WsServerEndpoint.broadcast: {}", sessions.size());
+			lastJson = json;
+
+			// 并发推送消息，以提高推送效率
+			final WaitGroup wg = new WaitGroup();
+			wg.add(1);
+
+			for (String id : sessions.keySet()) {
+				Session session = sessions.get(id);
 				try {
-					session.close();
-					sessions.remove(id);
-				} catch (IOException e1) {
+					wg.add(1);
+					session.getAsyncRemote().sendText(json, (result)->{
+						log.trace("SendResult: {} / {}", result.isOK(), result.getException());
+						wg.done();
+					});
+				} catch (Exception e) {
+					try {
+						sessions.remove(id);
+						session.close();
+					} catch (IOException e1) {
+					}
 				}
 			}
-		}
+			wg.done();
+			wg.await();
+		});
+	}
+
+	static class WaitGroup {
+	    private int jobs = 0;
+
+	    public synchronized void add(int i) {
+	        jobs += i;
+	    }
+
+	    public synchronized void done() {
+	        if (--jobs == 0) {
+	            notifyAll();
+	        }
+	    }
+
+	    public synchronized void await() {
+	        while (jobs > 0) {
+	            try {
+					wait();
+				} catch (InterruptedException e) {
+					return;
+				}
+	        }
+	    }
 	}
 }

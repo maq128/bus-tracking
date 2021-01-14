@@ -27,7 +27,7 @@ public class WsClientEndpoint {
 
 	public Session connect() {
 		if (session != null) return session;
-		log.trace("connecting...");
+		log.info("connecting...");
 		try {
 			WebSocketContainer container = ContainerProvider.getWebSocketContainer();
 			session = container.connectToServer(this, new URI(url));
@@ -43,7 +43,7 @@ public class WsClientEndpoint {
 
 	public void disconnect() {
 		if (session == null) return;
-		log.trace("disconnecting...");
+		log.info("disconnecting...");
 		try {
 			session.close();
 		} catch (Exception e) {
@@ -56,13 +56,13 @@ public class WsClientEndpoint {
 
 	@OnOpen
 	public void onOpen(Session session) {
-		log.trace("connected: {}", session.getId());
+		log.info("connected: {}", session.getId());
 		this.session = session;
 	}
 
 	@OnClose
 	public void onClose(Session session, CloseReason reason) {
-		log.trace("disconnected: {}", session.getId());
+		log.info("disconnected: {}", session.getId());
 		this.session = null;
 	}
 

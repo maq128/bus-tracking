@@ -1,5 +1,7 @@
 package bus;
 
+import java.util.concurrent.CompletableFuture;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -24,23 +26,34 @@ public class FeedService {
 	private String lastJson;
 	private WsClientEndpoint wsClient;
 
+	private CompletableFuture<Void> futureBroadcast;
+
 	@Scheduled(fixedDelay = 5000)
 	public void healthcheck() {
 		if (wsClient == null) {
 			wsClient = new WsClientEndpoint(wsEndpoint, new WsClientEndpoint.MessageHandler() {
-				public void handleMessage(String json) {
+				public void handleMessage(final String json) {
+					// 如果上一个消息还没有推送完，则跳过
+					if (futureBroadcast != null) {
+						log.warn("message overlapped, ignore.");
+						return;
+					}
+
 					// 如果是重复内容，则跳过
 					if (json.equals(lastJson)) {
-						log.trace("handleTextMessage: duplicated message, skip.");
+						log.trace("duplicated message, skip.");
 						return;
 					}
 					lastJson = json;
 
-					log.trace("handleTextMessage: {}", json);
+					log.trace("broadcast: {}", json);
 
-					// 广播推送消息
-					// TODO: 避免发送时间过长，导致新消息重叠
-					WsServerEndpoint.broadcast(json);
+					// 广播推送消息，异步执行
+					futureBroadcast = WsServerEndpoint.broadcast(json);
+					futureBroadcast.thenAccept((v)->{
+						log.trace("broadcast: finished.");
+						futureBroadcast = null;
+					});
 				}
 			});
 		}
