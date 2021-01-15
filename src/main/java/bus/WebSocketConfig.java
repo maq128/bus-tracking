@@ -1,12 +1,13 @@
 package bus;
 
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.server.standard.ServerEndpointExporter;
 
-@Configuration
-@EnableWebSocket
+/**
+ * @deprecated 改用 Netty 实现 WebSocket server。
+ */
+//@Configuration
+//@EnableWebSocket
 public class WebSocketConfig {
 	@Bean
 	public ServerEndpointExporter serverEndpoint() {

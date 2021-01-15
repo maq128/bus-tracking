@@ -5,8 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.validation.constraints.NotNull;
-
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
@@ -14,6 +12,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Service;
 
 import com.google.gson.Gson;
@@ -29,7 +28,7 @@ public class ApiService {
 	CacheService cacheService;
 
 	@SuppressWarnings("unchecked")
-	@NotNull
+	@NonNull
 	public List<Object> getBuslines() {
 		String cacheKey = "lines";
 		Object value = cacheService.get(cacheKey);
@@ -45,7 +44,7 @@ public class ApiService {
 	}
 
 	@SuppressWarnings("unchecked")
-	@NotNull
+	@NonNull
 	public Map<String, Object> lineDetail(long id) {
 		String cacheKey = "detail_" + String.valueOf(id);
 		Object value = cacheService.get(cacheKey);

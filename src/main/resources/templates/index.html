@@ -352,7 +352,10 @@ function openWebSocket() {
 
 	// 建立webSocket连接
 	var wsUrl = 'ws://' + window.location.host + '/ws';
-	websocket = new WebSocket('ws://' + window.location.host + '/ws');
+	if (window.location.port == 8080) {
+		wsUrl = 'ws://127.0.0.1:8081/ws';
+	}
+	websocket = new WebSocket(wsUrl);
 
 	// 打开webSokcet连接时，回调该函数
 	websocket.onopen = function () {

@@ -1,7 +1,5 @@
 package bus;
 
-import java.util.concurrent.CompletableFuture;
-
 import org.springframework.context.annotation.Bean;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -9,6 +7,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Service;
 
+import io.netty.util.concurrent.Future;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
@@ -26,7 +25,7 @@ public class FeedService {
 	private String lastJson;
 	private WsClientEndpoint wsClient;
 
-	private CompletableFuture<Void> futureBroadcast;
+	private Future<Void> futureBroadcast;
 
 	@Scheduled(fixedDelay = 5000)
 	public void healthcheck() {
@@ -49,8 +48,8 @@ public class FeedService {
 					log.trace("broadcast: {}", json);
 
 					// 广播推送消息，异步执行
-					futureBroadcast = WsServerEndpoint.broadcast(json);
-					futureBroadcast.thenAccept((v)->{
+					futureBroadcast = NettyWebsocketServerHandler.broadcast(json);
+					futureBroadcast.addListener((f) -> {
 						log.trace("broadcast: finished.");
 						futureBroadcast = null;
 					});
@@ -58,7 +57,7 @@ public class FeedService {
 			});
 		}
 
-		if (WsServerEndpoint.getSessionsNum() > 0) {
+		if (NettyWebsocketServerHandler.getClientsNum() > 0) {
 			// 有用户在线，需要持续获取数据
 			wsClient.connect();
 		} else {

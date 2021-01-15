@@ -11,11 +11,13 @@ import javax.websocket.server.ServerEndpoint;
 
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * @deprecated 改用 Netty 实现 WebSocket server。
+ */
 @ServerEndpoint("/ws")
 @Slf4j
 public class WsServerEndpoint {
-	static ConcurrentHashMap<String, Session> sessions = new ConcurrentHashMap<String, Session>();
-
+	private static ConcurrentHashMap<String, Session> sessions = new ConcurrentHashMap<String, Session>();
 	private static String lastJson;
 
 	@OnOpen
@@ -46,19 +48,18 @@ public class WsServerEndpoint {
 	}
 
 	public static CompletableFuture<Void> broadcast(final String json) {
-		return CompletableFuture.runAsync(()->{
+		return CompletableFuture.runAsync(() -> {
 			log.trace("WsServerEndpoint.broadcast: {}", sessions.size());
 			lastJson = json;
 
 			// 并发推送消息，以提高推送效率
 			final WaitGroup wg = new WaitGroup();
-			wg.add(1);
 
 			for (String id : sessions.keySet()) {
 				Session session = sessions.get(id);
 				try {
 					wg.add(1);
-					session.getAsyncRemote().sendText(json, (result)->{
+					session.getAsyncRemote().sendText(json, (result) -> {
 						log.trace("SendResult: {} / {}", result.isOK(), result.getException());
 						wg.done();
 					});
@@ -70,7 +71,6 @@ public class WsServerEndpoint {
 					}
 				}
 			}
-			wg.done();
 			wg.await();
 		});
 	}
