@@ -24,14 +24,13 @@ public class NettyWebsocketServerHandler extends ChannelInboundHandlerAdapter {
 	public void channelActive(ChannelHandlerContext ctx) throws Exception {
 		Channel channel = ctx.channel();
 		log.trace("channelActive: {} @{}", channel.id().asLongText(), channel.remoteAddress());
+
 		if (lastJson != null) {
-			try {
-				// FIXME: 客户端没有收到？
+			// 此处直接调用 channel.writeAndFlush() 会失败，因为此时 channel 还没有准备好支持 TextWebSocketFrame，
+			// 甩给一个 executor 去执行就可以了。
+			GlobalEventExecutor.INSTANCE.execute(() -> {
 				channel.writeAndFlush(new TextWebSocketFrame(lastJson));
-			} catch (Exception e) {
-				channel.close();
-				return;
-			}
+			});
 		}
 		channelGroup.add(channel);
 
@@ -52,8 +51,8 @@ public class NettyWebsocketServerHandler extends ChannelInboundHandlerAdapter {
 
 	public static Future<Void> broadcast(final String json) {
 		log.trace("broadcast: {}", channelGroup.size());
-		lastJson = json;
 
+		lastJson = json;
 		return channelGroup.writeAndFlush(new TextWebSocketFrame(json));
 	}
 }
